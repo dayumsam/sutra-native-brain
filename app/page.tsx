@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion } from "motion/react";
 import { GraphCanvas } from "@/components/GraphCanvas";
 import { ResponsePanel } from "@/components/ResponsePanel";
 import { GuidedWalkthrough, WorkflowRail } from "@/components/WorkflowSidebar";
@@ -124,34 +123,12 @@ export default function Home() {
 
         {/* Graph canvas */}
         <section ref={graphSectionRef} className="h-[360px] min-w-0 shrink-0 bg-paper p-3 sm:h-[440px] lg:h-auto lg:flex-1">
-          <div className="relative h-full overflow-hidden rounded-2xl border border-[#2a2740] shadow-[0_8px_30px_rgba(28,25,55,0.18)]">
+          <div className="h-full overflow-hidden rounded-2xl border border-[#2a2740] shadow-[0_8px_30px_rgba(28,25,55,0.18)]">
             <GraphCanvas
               activeNodeIds={activeNodeIds}
               focusNodeIds={focusNodeIds}
               hasRun={revealedSteps > 0}
             />
-            {!selectedId && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                  className="mx-4 flex max-w-[210px] flex-col items-center gap-3 rounded-2xl border border-[#3a3660] bg-[#16142a]/80 px-5 py-5 text-center backdrop-blur-md"
-                  style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.45)" }}
-                >
-                  <div className="relative flex h-2.5 w-2.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#6e62e8] opacity-50" />
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#6e62e8]" />
-                  </div>
-                  <p className="text-[13px] leading-snug text-[#c4c0e8]">
-                    Select a workflow from the list to watch the agent read from the graph in real time
-                  </p>
-                  <span className="text-[10.5px] font-medium text-[#6e62e8]/70">
-                    Pick one from the sidebar
-                  </span>
-                </motion.div>
-              </div>
-            )}
           </div>
         </section>
 
