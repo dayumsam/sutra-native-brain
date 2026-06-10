@@ -70,6 +70,14 @@ export default function Home() {
     [clearTimers]
   );
 
+  const clearRun = useCallback(() => {
+    clearTimers();
+    setSelectedId(null);
+    setStatus("idle");
+    setRevealedSteps(0);
+    setSidebarCollapsed(false);
+  }, [clearTimers]);
+
   const focusNodeIds = workflow ? workflow.retrieval.map((s) => s.nodeId) : [];
   const nextWorkflow = WORKFLOWS.find((w) => !completedIds.includes(w.id)) ?? null;
 
@@ -142,6 +150,7 @@ export default function Home() {
               activeNodeIds={activeNodeIds}
               focusNodeIds={focusNodeIds}
               hasRun={revealedSteps > 0}
+              onClear={selectedId ? clearRun : undefined}
             />
           </div>
         </section>

@@ -41,7 +41,8 @@ import {
 type EntityData = {
   label: string;
   domain: Domain;
-  state: "idle" | "active" | "dim";
+  // "soft" marks satellites of an active hub — traversed, but lightly lit
+  state: "idle" | "active" | "soft" | "dim";
   satellite: boolean;
   size: number;
   hovered?: boolean;
@@ -128,6 +129,7 @@ function NodeTooltip({ label, fields, color }: { label: string; fields: [string,
 function EntityNodeView({ data }: NodeProps<EntityNode>) {
   const color = DOMAIN_META[data.domain].color;
   const active = data.state === "active";
+  const soft = data.state === "soft";
   const dim = data.state === "dim";
   const hovered = !!data.hovered;
   const size = data.size;
@@ -137,7 +139,11 @@ function EntityNodeView({ data }: NodeProps<EntityNode>) {
   return (
     <div
       className="relative transition-opacity duration-300"
-      style={{ width: size, height: size, opacity: dim ? (data.satellite ? 0.14 : 0.3) : 1 }}
+      style={{
+        width: size,
+        height: size,
+        opacity: dim ? (data.satellite ? 0.14 : 0.3) : soft ? 0.85 : 1,
+      }}
     >
       <div
         className="h-full w-full rounded-full transition-shadow duration-300"
@@ -145,15 +151,17 @@ function EntityNodeView({ data }: NodeProps<EntityNode>) {
           background: color,
           boxShadow: active
             ? `0 0 0 4px ${color}38, 0 0 18px ${color}cc`
-            : hovered
-              ? `0 0 0 3px ${color}50, 0 0 10px ${color}88`
-              : product
-                ? `0 0 0 3px ${color}28, 0 0 14px ${color}77`
-                : `inset 0 0 0 1.5px rgba(8, 6, 20, 0.35)`,
+            : soft
+              ? `0 0 0 2px ${color}22, 0 0 8px ${color}66`
+              : hovered
+                ? `0 0 0 3px ${color}50, 0 0 10px ${color}88`
+                : product
+                  ? `0 0 0 3px ${color}28, 0 0 14px ${color}77`
+                  : `inset 0 0 0 1.5px rgba(8, 6, 20, 0.35)`,
           cursor: data.satellite ? "default" : "pointer",
         }}
       />
-      {(!data.satellite || active) && (
+      {(!data.satellite || active || soft) && (
         <div
           className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-center"
           style={{
@@ -182,6 +190,9 @@ function EntityNodeView({ data }: NodeProps<EntityNode>) {
 const nodeTypes = { entity: EntityNodeView };
 
 const ALL_EDGES = [...EDGES, ...SATELLITE_EDGES];
+
+// satellite id -> hub id, for spreading a soft highlight to an active hub's leaves
+const SAT_HUB = new Map(SATELLITE_EDGES.map((e) => [e.from, e.to]));
 
 // Node size scales with degree so heavily-connected hubs read as hubs
 const DEGREE = new Map<string, number>();
@@ -232,9 +243,11 @@ type Props = {
   /** All node ids in the running workflow — the camera frames these. */
   focusNodeIds: string[];
   hasRun: boolean;
+  /** When provided, a "Clear graph" button is shown that resets the run. */
+  onClear?: () => void;
 };
 
-function CanvasInner({ activeNodeIds, focusNodeIds, hasRun }: Props) {
+function CanvasInner({ activeNodeIds, focusNodeIds, hasRun, onClear }: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const { fitView } = useReactFlow();
   const simRef = useRef<Simulation<SimNode, SimLink> | null>(null);
@@ -357,11 +370,14 @@ function CanvasInner({ activeNodeIds, focusNodeIds, hasRun }: Props) {
     const active = new Set(activeNodeIds);
     setNodes((ns) =>
       ns.map((n) => {
+        const hub = SAT_HUB.get(n.id);
         const state: EntityData["state"] = active.has(n.id)
           ? "active"
-          : hasRun
-            ? "dim"
-            : "idle";
+          : hub && active.has(hub)
+            ? "soft"
+            : hasRun
+              ? "dim"
+              : "idle";
         return n.data.state === state ? n : { ...n, data: { ...n.data, state } };
       })
     );
@@ -426,17 +442,21 @@ function CanvasInner({ activeNodeIds, focusNodeIds, hasRun }: Props) {
     const active = new Set(activeNodeIds);
     return ALL_EDGES.map((edge) => {
       const isActive = active.has(edge.from) && active.has(edge.to);
-      // satellite edges are decoration — runs never traverse them, keep them faint
+      // satellite edges are decoration — runs never traverse them, keep them faint,
+      // but lift the ones hanging off an active hub so the traversal spreads outward
       const satellite = edge.id.startsWith("se_");
+      const softActive = satellite && active.has(edge.to);
       const stroke = isActive
         ? "var(--canvas-active)"
-        : satellite
-          ? hasRun
-            ? "#272440"
-            : "var(--canvas-edge-dim)"
-          : hasRun
-            ? "var(--canvas-edge-dim)"
-            : "var(--canvas-edge)";
+        : softActive
+          ? "#56517f"
+          : satellite
+            ? hasRun
+              ? "#272440"
+              : "var(--canvas-edge-dim)"
+            : hasRun
+              ? "var(--canvas-edge-dim)"
+              : "var(--canvas-edge)";
       return {
         id: edge.id,
         source: edge.from,
@@ -446,13 +466,34 @@ function CanvasInner({ activeNodeIds, focusNodeIds, hasRun }: Props) {
         markerEnd: satellite
           ? undefined
           : { type: MarkerType.ArrowClosed, width: 11, height: 11, color: stroke },
-        style: { stroke, strokeWidth: isActive ? 1.6 : satellite ? 0.8 : 1 },
+        style: { stroke, strokeWidth: isActive ? 1.6 : softActive ? 1 : satellite ? 0.8 : 1 },
       };
     });
   }, [activeNodeIds, hasRun]);
 
   return (
-    <div ref={wrapRef} className="h-full w-full">
+    <div ref={wrapRef} className="relative h-full w-full">
+      {onClear && (
+        <button
+          onClick={onClear}
+          className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-colors"
+          style={{
+            background: "#262339",
+            border: "1px solid #322f4c",
+            color: "#b6b3cf",
+          }}
+        >
+          <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none">
+            <path
+              d="M3 3l6 6M9 3L3 9"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+          </svg>
+          Clear graph
+        </button>
+      )}
       <ReactFlow
         nodes={nodes}
         edges={edges}
