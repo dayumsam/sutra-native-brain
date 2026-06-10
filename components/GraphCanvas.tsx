@@ -131,6 +131,7 @@ function EntityNodeView({ data }: NodeProps<EntityNode>) {
   const dim = data.state === "dim";
   const hovered = !!data.hovered;
   const size = data.size;
+  const product = data.domain === "product" && !data.satellite;
   const showTooltip = hovered && !data.satellite && data.fields && data.fields.length > 0;
 
   return (
@@ -146,7 +147,9 @@ function EntityNodeView({ data }: NodeProps<EntityNode>) {
             ? `0 0 0 4px ${color}38, 0 0 18px ${color}cc`
             : hovered
               ? `0 0 0 3px ${color}50, 0 0 10px ${color}88`
-              : `inset 0 0 0 1.5px rgba(8, 6, 20, 0.35)`,
+              : product
+                ? `0 0 0 3px ${color}28, 0 0 14px ${color}77`
+                : `inset 0 0 0 1.5px rgba(8, 6, 20, 0.35)`,
           cursor: data.satellite ? "default" : "pointer",
         }}
       />
@@ -157,10 +160,10 @@ function EntityNodeView({ data }: NodeProps<EntityNode>) {
             top: size + 5,
             width: "max-content",
             maxWidth: 120,
-            fontSize: data.satellite ? 9 : 10,
+            fontSize: data.satellite ? 9 : product ? 11 : 10,
             lineHeight: 1.25,
-            fontWeight: active || hovered ? 600 : 400,
-            color: active || hovered ? "#f4f3fb" : "#8f8bb0",
+            fontWeight: active || hovered || product ? 600 : 400,
+            color: active || hovered ? "#f4f3fb" : product ? "#c9c5e4" : "#8f8bb0",
             textShadow: "0 1px 4px rgba(10, 8, 22, 0.9)",
           }}
         >
@@ -193,7 +196,15 @@ const initialNodes: EntityNode[] = [
     id: n.id,
     type: "entity" as const,
     position: { x: n.x, y: n.y },
-    data: { label: n.label, domain: n.domain, state: "idle" as const, satellite: false, size: sizeFor(n.id), fields: n.fields },
+    data: {
+      label: n.label,
+      domain: n.domain,
+      state: "idle" as const,
+      satellite: false,
+      // product nodes anchor the graph — render them noticeably larger
+      size: sizeFor(n.id) + (n.domain === "product" ? 6 : 0),
+      fields: n.fields,
+    },
   })),
   ...SATELLITE_NODES.map((n) => ({
     id: n.id,
@@ -415,19 +426,27 @@ function CanvasInner({ activeNodeIds, focusNodeIds, hasRun }: Props) {
     const active = new Set(activeNodeIds);
     return ALL_EDGES.map((edge) => {
       const isActive = active.has(edge.from) && active.has(edge.to);
+      // satellite edges are decoration — runs never traverse them, keep them faint
+      const satellite = edge.id.startsWith("se_");
       const stroke = isActive
         ? "var(--canvas-active)"
-        : hasRun
-          ? "var(--canvas-edge-dim)"
-          : "var(--canvas-edge)";
+        : satellite
+          ? hasRun
+            ? "#272440"
+            : "var(--canvas-edge-dim)"
+          : hasRun
+            ? "var(--canvas-edge-dim)"
+            : "var(--canvas-edge)";
       return {
         id: edge.id,
         source: edge.from,
         target: edge.to,
         type: "straight",
         animated: isActive,
-        markerEnd: { type: MarkerType.ArrowClosed, width: 11, height: 11, color: stroke },
-        style: { stroke, strokeWidth: isActive ? 1.6 : 1 },
+        markerEnd: satellite
+          ? undefined
+          : { type: MarkerType.ArrowClosed, width: 11, height: 11, color: stroke },
+        style: { stroke, strokeWidth: isActive ? 1.6 : satellite ? 0.8 : 1 },
       };
     });
   }, [activeNodeIds, hasRun]);
