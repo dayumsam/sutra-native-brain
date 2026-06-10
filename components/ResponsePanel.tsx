@@ -271,9 +271,11 @@ type Props = {
   status: "idle" | "received" | "running" | "synthesizing" | "complete";
   revealedSteps: number;
   runId: number;
+  nextWorkflow?: Workflow | null;
+  onNextWorkflow?: () => void;
 };
 
-export function ResponsePanel({ workflow, status, revealedSteps, runId }: Props) {
+export function ResponsePanel({ workflow, status, revealedSteps, runId, nextWorkflow, onNextWorkflow }: Props) {
   const [openWhy, setOpenWhy] = useState<string | null>(null);
   // The log collapses by default once the run completes; the user can override
   // by toggling, and the override resets whenever the run state changes.
@@ -574,6 +576,45 @@ export function ResponsePanel({ workflow, status, revealedSteps, runId }: Props)
                 ))}
               </div>
             </div>
+
+            {/* Next workflow CTA */}
+            {nextWorkflow && onNextWorkflow && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.5 }}
+                className="mt-6 overflow-hidden rounded-xl border border-accent/20 bg-accent-soft"
+              >
+                <div className="flex items-center justify-between gap-4 px-4 py-4">
+                  <div className="min-w-0">
+                    <div className="text-[10.5px] font-semibold uppercase tracking-wide text-accent/70">
+                      Next workflow
+                    </div>
+                    <div className="mt-1 text-[13px] font-semibold leading-snug text-ink">
+                      {nextWorkflow.name}
+                    </div>
+                    <div className="mt-0.5 text-[11.5px] leading-snug text-ink-faint">
+                      {nextWorkflow.description}
+                    </div>
+                  </div>
+                  <button
+                    onClick={onNextWorkflow}
+                    className="flex shrink-0 items-center gap-1.5 rounded-lg bg-accent px-3.5 py-2 text-[12px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+                  >
+                    Run
+                    <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none">
+                      <path
+                        d="M4.5 3L7.5 6L4.5 9"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </motion.div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
