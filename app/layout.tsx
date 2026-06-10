@@ -16,9 +16,24 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sutra · Native context layer",
+  metadataBase: new URL("https://uc.heysutra.com"),
+  title: "Sutra — Manufacturing Intelligence",
   description:
     "A demo of Sutra as a context layer across Native's product, supplier, manufacturing, quality, service, and warranty data.",
+  openGraph: {
+    title: "Sutra — Manufacturing Intelligence",
+    description:
+      "A demo of Sutra as a context layer across Native's product, supplier, manufacturing, quality, service, and warranty data.",
+    url: "https://uc.heysutra.com",
+    siteName: "Sutra",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sutra — Manufacturing Intelligence",
+    description:
+      "A demo of Sutra as a context layer across Native's product, supplier, manufacturing, quality, service, and warranty data.",
+  },
 };
 
 export default function RootLayout({
