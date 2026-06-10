@@ -217,7 +217,7 @@ export function GuidedWalkthrough({
                   selected
                     ? "border-accent/35 bg-accent-soft shadow-sm"
                     : upNext
-                      ? "border-line bg-card shadow-sm hover:border-ink-faint/40"
+                      ? "border-accent/35 bg-accent-soft shadow-sm"
                       : "border-transparent hover:border-line hover:bg-card"
                 }`}
               >
