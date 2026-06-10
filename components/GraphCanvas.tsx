@@ -43,6 +43,7 @@ type EntityData = {
   domain: Domain;
   state: "idle" | "active" | "dim";
   satellite: boolean;
+  size: number;
   hovered?: boolean;
   fields?: [string, string][];
 };
@@ -129,7 +130,7 @@ function EntityNodeView({ data }: NodeProps<EntityNode>) {
   const active = data.state === "active";
   const dim = data.state === "dim";
   const hovered = !!data.hovered;
-  const size = data.satellite ? 9 : 14;
+  const size = data.size;
   const showTooltip = hovered && !data.satellite && data.fields && data.fields.length > 0;
 
   return (
@@ -177,28 +178,37 @@ function EntityNodeView({ data }: NodeProps<EntityNode>) {
 
 const nodeTypes = { entity: EntityNodeView };
 
+const ALL_EDGES = [...EDGES, ...SATELLITE_EDGES];
+
+// Node size scales with degree so heavily-connected hubs read as hubs
+const DEGREE = new Map<string, number>();
+ALL_EDGES.forEach((e) => {
+  DEGREE.set(e.from, (DEGREE.get(e.from) ?? 0) + 1);
+  DEGREE.set(e.to, (DEGREE.get(e.to) ?? 0) + 1);
+});
+const sizeFor = (id: string) => Math.round(10 + Math.sqrt(DEGREE.get(id) ?? 1) * 2.6);
+
 const initialNodes: EntityNode[] = [
   ...NODES.map((n) => ({
     id: n.id,
     type: "entity" as const,
     position: { x: n.x, y: n.y },
-    data: { label: n.label, domain: n.domain, state: "idle" as const, satellite: false, fields: n.fields },
+    data: { label: n.label, domain: n.domain, state: "idle" as const, satellite: false, size: sizeFor(n.id), fields: n.fields },
   })),
   ...SATELLITE_NODES.map((n) => ({
     id: n.id,
     type: "entity" as const,
     position: { x: n.x, y: n.y },
-    data: { label: n.label, domain: n.domain, state: "idle" as const, satellite: true },
+    data: { label: n.label, domain: n.domain, state: "idle" as const, satellite: true, size: 9 },
   })),
 ];
-
-const ALL_EDGES = [...EDGES, ...SATELLITE_EDGES];
 
 type SimNode = SimulationNodeDatum & {
   id: string;
   homeX: number;
   homeY: number;
   satellite: boolean;
+  size: number;
 };
 
 type SimLink = SimulationLinkDatum<SimNode>;
@@ -230,6 +240,7 @@ function CanvasInner({ activeNodeIds, focusNodeIds, hasRun }: Props) {
       homeX: n.position.x,
       homeY: n.position.y,
       satellite: n.data.satellite,
+      size: n.data.size,
     }));
     const byId = new Map(simNodes.map((s) => [s.id, s]));
     simNodesRef.current = byId;
@@ -257,7 +268,7 @@ function CanvasInner({ activeNodeIds, focusNodeIds, hasRun }: Props) {
       .force(
         "collide",
         forceCollide<SimNode>()
-          .radius((d) => (d.satellite ? 13 : 26))
+          .radius((d) => (d.satellite ? 13 : 12 + d.size))
           .strength(0.8)
       )
       .alpha(0.6)
