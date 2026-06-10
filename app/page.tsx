@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GraphCanvas } from "@/components/GraphCanvas";
+import { IntroTour } from "@/components/IntroTour";
 import { ResponsePanel } from "@/components/ResponsePanel";
 import { GuidedWalkthrough, MobileActiveBar, WorkflowRail } from "@/components/WorkflowSidebar";
 import { WORKFLOWS, COPY, type Workflow } from "@/lib/demo-data";
@@ -22,8 +23,10 @@ export default function Home() {
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [runId, setRunId] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [introOpen, setIntroOpen] = useState(true);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const graphSectionRef = useRef<HTMLElement>(null);
+  const asideRef = useRef<HTMLElement>(null);
 
   const workflow = WORKFLOWS.find((w) => w.id === selectedId) ?? null;
   const activeNodeIds = workflow
@@ -89,6 +92,20 @@ export default function Home() {
         <span className="hidden h-4 w-px bg-line sm:block" />
         <span className="hidden text-[13px] text-ink-soft sm:inline">{COPY.title}</span>
         <div className="ml-auto flex items-center gap-2.5">
+          <button
+            onClick={() => {
+              setSidebarCollapsed(false);
+              setIntroOpen(true);
+            }}
+            className="flex items-center gap-1.5 rounded-full border border-line px-2.5 py-0.5 text-[11px] text-ink-faint transition-colors hover:border-accent/40 hover:text-ink-soft"
+          >
+            <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none">
+              <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M4.6 4.7a1.4 1.4 0 112.1 1.2c-.45.27-.7.5-.7.95" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+              <circle cx="6" cy="8.6" r="0.55" fill="currentColor" />
+            </svg>
+            Replay intro
+          </button>
           <span className="rounded-full border border-line px-2.5 py-0.5 text-[11px] text-ink-faint">
             Synthetic data for demo
           </span>
@@ -98,6 +115,7 @@ export default function Home() {
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* Workflow list — collapses to a slim rail on desktop */}
         <aside
+          ref={asideRef}
           className={`w-full shrink-0 border-b border-line bg-paper p-4 scrollbar-thin transition-[width] duration-300 ease-out sm:p-5 lg:border-b-0 lg:border-r ${
             sidebarCollapsed
               ? "z-10 lg:w-[60px] lg:overflow-visible lg:px-3 lg:py-4"
@@ -173,6 +191,17 @@ export default function Home() {
           </section>
         )}
       </div>
+
+      <IntroTour
+        open={introOpen}
+        asideRef={asideRef}
+        graphRef={graphSectionRef}
+        onClose={() => setIntroOpen(false)}
+        onRunFirst={() => {
+          setIntroOpen(false);
+          run(WORKFLOWS[0]);
+        }}
+      />
     </main>
   );
 }
