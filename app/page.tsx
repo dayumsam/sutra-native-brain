@@ -132,12 +132,10 @@ export default function Home() {
           )}
         </aside>
 
-        {/* Graph canvas — pinned to the top on mobile while a run plays out */}
+        {/* Graph canvas */}
         <section
           ref={graphSectionRef}
-          className={`h-[360px] min-w-0 shrink-0 bg-paper p-3 sm:h-[440px] lg:static lg:h-auto lg:flex-1 ${
-            selectedId ? "sticky top-0 z-20" : ""
-          }`}
+          className="h-[360px] min-w-0 shrink-0 bg-paper p-3 sm:h-[440px] lg:h-auto lg:flex-1"
         >
           <div className="h-full overflow-hidden rounded-2xl border border-[#2a2740] shadow-[0_8px_30px_rgba(28,25,55,0.18)]">
             <GraphCanvas
