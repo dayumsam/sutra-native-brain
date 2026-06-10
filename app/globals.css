@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f6f7fb;
+  --card: #ffffff;
+  --line: #e6e8f1;
+  --line-soft: #eef0f6;
+  --ink: #20232f;
+  --ink-soft: #5b6172;
+  --ink-faint: #979daf;
+  --accent: #6e62e8;
+  --accent-soft: #efedfc;
+  --green: #1a7f4e;
+  --amber: #b45309;
+  --red: #b3403a;
+
+  /* dark graph canvas */
+  --canvas: #1d1b2e;
+  --canvas-edge: #454260;
+  --canvas-edge-dim: #2e2b46;
+  --canvas-active: #7dd3fc;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-green: var(--green);
+  --color-amber: var(--amber);
+  --color-red: var(--red);
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-body);
+  --font-mono: var(--font-mono-face);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* shimmer placeholder for in-flight reads and drafting */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+.skeleton {
+  border-radius: 4px;
+  background: linear-gradient(90deg, #e2e5f0 30%, #d3d7e6 50%, #e2e5f0 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #d3d6e2 transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #d3d6e2;
+  border-radius: 3px;
+}
+
+/* React Flow adjustments (dark canvas) */
+.react-flow,
+.react-flow__pane {
+  background: var(--canvas);
+}
+.react-flow__attribution {
+  background: transparent;
+}
+.react-flow__attribution a {
+  color: #555273;
+}
+.react-flow__node {
+  cursor: grab;
+}
+.react-flow__node:active {
+  cursor: grabbing;
+}
+.react-flow__controls {
+  box-shadow: none;
+  border: 1px solid #322f4c;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.react-flow__controls button {
+  background: #262339;
+  border-bottom: 1px solid #322f4c;
+  color: #b6b3cf;
+  width: 26px;
+  height: 26px;
+}
+.react-flow__controls button:last-child {
+  border-bottom: none;
+}
+.react-flow__controls button:hover {
+  background: #2f2c47;
+}
+.react-flow__controls button path {
+  fill: currentColor;
+}
