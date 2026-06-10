@@ -82,7 +82,7 @@ export default function Home() {
         <span className="hidden text-[13px] text-ink-soft sm:inline">{COPY.title}</span>
         <div className="ml-auto flex items-center gap-2.5">
           <span className="rounded-full border border-line px-2.5 py-0.5 text-[11px] text-ink-faint">
-            Demo data
+            Synthetic data for demo
           </span>
         </div>
       </header>
