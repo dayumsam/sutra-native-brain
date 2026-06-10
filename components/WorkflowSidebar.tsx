@@ -148,6 +148,63 @@ export function WorkflowRail({
   );
 }
 
+/* Compact bar for mobile — shows only the active workflow once a run starts */
+export function MobileActiveBar({
+  workflows,
+  workflow,
+  status,
+  completedIds,
+  onExpand,
+}: {
+  workflows: Workflow[];
+  workflow: Workflow;
+  status: Status;
+  completedIds: string[];
+  onExpand: () => void;
+}) {
+  const busy = isBusy(status);
+  const done = completedIds.includes(workflow.id);
+  const index = workflows.findIndex((w) => w.id === workflow.id);
+
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-accent/35 bg-accent-soft px-3.5 py-3">
+      <span
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-mono text-[10.5px] font-semibold ${
+          done && !busy ? "bg-green/10 text-green" : "bg-card text-accent"
+        }`}
+      >
+        {busy ? (
+          <Spinner className="text-accent" />
+        ) : done ? (
+          <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none">
+            <path
+              d="M2.5 6.5L5 9l4.5-6"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        ) : (
+          index + 1
+        )}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[13.5px] font-medium text-ink">{workflow.name}</div>
+        <div className="text-[10.5px] font-semibold text-ink-faint">
+          {busy ? "Running" : "Viewing"} · {completedIds.length} of {workflows.length} done
+        </div>
+      </div>
+      <button
+        onClick={onExpand}
+        className="shrink-0 rounded-md border border-line bg-card px-2.5 py-1.5 text-[11px] font-medium text-ink-soft transition-colors hover:bg-line-soft"
+      >
+        All workflows
+      </button>
+    </div>
+  );
+}
+
 /* Numbered guided run-through with completion tracking */
 export function GuidedWalkthrough({
   workflows,

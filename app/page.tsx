@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GraphCanvas } from "@/components/GraphCanvas";
 import { ResponsePanel } from "@/components/ResponsePanel";
-import { GuidedWalkthrough, WorkflowRail } from "@/components/WorkflowSidebar";
+import { GuidedWalkthrough, MobileActiveBar, WorkflowRail } from "@/components/WorkflowSidebar";
 import { WORKFLOWS, COPY, type Workflow } from "@/lib/demo-data";
 
 const TRIGGER_MS = 700; // the trigger "arrives" before the agent reacts
@@ -96,8 +96,8 @@ export default function Home() {
               : "lg:w-[320px] lg:overflow-y-auto"
           }`}
         >
-          {/* The rail only applies at desktop width; mobile keeps the full list */}
-          <div className={sidebarCollapsed ? "lg:hidden" : ""}>
+          {/* Collapsed: mobile shows just the active workflow, desktop a slim rail */}
+          <div className={sidebarCollapsed ? "hidden" : ""}>
             <GuidedWalkthrough
               workflows={WORKFLOWS}
               selectedId={selectedId}
@@ -107,6 +107,17 @@ export default function Home() {
               onCollapse={() => setSidebarCollapsed(true)}
             />
           </div>
+          {sidebarCollapsed && workflow && (
+            <div className="lg:hidden">
+              <MobileActiveBar
+                workflows={WORKFLOWS}
+                workflow={workflow}
+                status={status}
+                completedIds={completedIds}
+                onExpand={() => setSidebarCollapsed(false)}
+              />
+            </div>
+          )}
           {sidebarCollapsed && (
             <div className="hidden lg:block">
               <WorkflowRail
@@ -121,8 +132,13 @@ export default function Home() {
           )}
         </aside>
 
-        {/* Graph canvas */}
-        <section ref={graphSectionRef} className="h-[360px] min-w-0 shrink-0 bg-paper p-3 sm:h-[440px] lg:h-auto lg:flex-1">
+        {/* Graph canvas — pinned to the top on mobile while a run plays out */}
+        <section
+          ref={graphSectionRef}
+          className={`h-[360px] min-w-0 shrink-0 bg-paper p-3 sm:h-[440px] lg:static lg:h-auto lg:flex-1 ${
+            selectedId ? "sticky top-0 z-20" : ""
+          }`}
+        >
           <div className="h-full overflow-hidden rounded-2xl border border-[#2a2740] shadow-[0_8px_30px_rgba(28,25,55,0.18)]">
             <GraphCanvas
               activeNodeIds={activeNodeIds}
