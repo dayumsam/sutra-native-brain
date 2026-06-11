@@ -49,9 +49,10 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
       const r = el.getBoundingClientRect();
       setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
     };
-    // On small screens the page scrolls, so the target may be off-screen
+    // On small screens the page scrolls, so the target may be off-screen.
+    // Pin it to the top — the card sits as a sheet at the bottom.
     if (window.innerWidth < 1024) {
-      el.scrollIntoView({ behavior: "smooth", block: target === "aside" ? "start" : "center" });
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
     measure();
     window.addEventListener("resize", measure);
