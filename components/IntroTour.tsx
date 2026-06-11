@@ -49,6 +49,10 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
       const r = el.getBoundingClientRect();
       setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
     };
+    // On small screens the page scrolls, so the target may be off-screen
+    if (window.innerWidth < 1024) {
+      el.scrollIntoView({ behavior: "smooth", block: target === "aside" ? "start" : "center" });
+    }
     measure();
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
@@ -71,28 +75,30 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
 
   const spotlight = target && rect;
 
-  // Where the card sits relative to the spotlit region
+  // Where the card sits relative to the spotlit region.
+  // Desktop anchors it beside/over the target; small screens get a bottom sheet
+  // since the anchored positions can land outside the viewport there.
   const cardStyle: React.CSSProperties = {};
-  let cardPlacement: "center" | "fixed" = "center";
+  let cardPlacement: "center" | "fixed" | "sheet" = "center";
   if (spotlight && typeof window !== "undefined") {
-    cardPlacement = "fixed";
     const vw = window.innerWidth;
-    const cardW = Math.min(400, vw - 32);
-    if (target === "aside" && rect.left + rect.width + cardW + 36 < vw && rect.height > rect.width) {
-      // desktop sidebar — card to its right, near the top
-      cardStyle.left = rect.left + rect.width + 20;
-      cardStyle.top = Math.max(16, rect.top + 20);
-    } else if (target === "aside") {
-      // mobile sidebar (full-width strip) — card below it
-      cardStyle.left = Math.max(16, Math.min(rect.left + rect.width / 2 - cardW / 2, vw - cardW - 16));
-      cardStyle.top = rect.top + rect.height + 16;
+    if (vw < 1024) {
+      cardPlacement = "sheet";
     } else {
-      // graph — card floats centered over the canvas
-      cardStyle.left = rect.left + rect.width / 2;
-      cardStyle.top = rect.top + rect.height / 2;
-      cardStyle.transform = "translate(-50%, -50%)";
+      cardPlacement = "fixed";
+      const cardW = Math.min(400, vw - 32);
+      if (target === "aside") {
+        // sidebar — card to its right, near the top
+        cardStyle.left = rect.left + rect.width + 20;
+        cardStyle.top = Math.max(16, rect.top + 20);
+      } else {
+        // graph — card floats centered over the canvas
+        cardStyle.left = rect.left + rect.width / 2;
+        cardStyle.top = rect.top + rect.height / 2;
+        cardStyle.transform = "translate(-50%, -50%)";
+      }
+      cardStyle.width = cardW;
     }
-    cardStyle.width = cardW;
   }
 
   return (
@@ -136,17 +142,30 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
               initial={{ opacity: 0, y: 10, scale: 0.985 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-              className="overflow-hidden rounded-2xl border border-line bg-card shadow-2xl"
+              className="flex flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-2xl"
               style={
                 cardPlacement === "fixed"
-                  ? { position: "fixed", ...cardStyle }
-                  : { width: "min(440px, calc(100vw - 32px))" }
+                  ? { position: "fixed", maxHeight: "calc(100dvh - 32px)", ...cardStyle }
+                  : cardPlacement === "sheet"
+                    ? {
+                        position: "fixed",
+                        left: 12,
+                        right: 12,
+                        bottom: "calc(12px + env(safe-area-inset-bottom))",
+                        maxHeight: "55dvh",
+                      }
+                    : {
+                        width: "min(440px, calc(100vw - 32px))",
+                        maxHeight: "calc(100dvh - 32px)",
+                      }
               }
             >
-              <StepContent step={step} />
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <StepContent step={step} />
+              </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between border-t border-line-soft px-5 py-3.5">
+              <div className="flex shrink-0 items-center justify-between border-t border-line-soft px-5 py-3.5">
                 <div className="flex items-center gap-1.5">
                   {STEPS.map((_, i) => (
                     <span
