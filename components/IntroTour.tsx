@@ -193,20 +193,12 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
                     </button>
                   )}
                   {last ? (
-                    <>
-                      <button
-                        onClick={onClose}
-                        className="rounded-lg border border-line px-3 py-1.5 text-[12px] font-medium text-ink-soft transition-colors hover:bg-line-soft"
-                      >
-                        Explore on my own
-                      </button>
-                      <button
-                        onClick={onRunFirst}
-                        className="rounded-lg bg-accent px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
-                      >
-                        Run the first workflow
-                      </button>
-                    </>
+                    <button
+                      onClick={onRunFirst}
+                      className="rounded-lg bg-accent px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+                    >
+                      Run the first workflow
+                    </button>
                   ) : (
                     <button
                       onClick={() => setStep((s) => s + 1)}
