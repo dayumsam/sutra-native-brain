@@ -62,14 +62,22 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
       setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
     };
     // On small screens the page scrolls, so the target may be off-screen.
-    // Pin it to the top — the card sits as a sheet at the bottom.
+    // Force it flush with the top edge — the card sits as a sheet at the
+    // bottom. Re-assert once since iOS can interrupt smooth scrolls.
+    let settle: ReturnType<typeof setTimeout> | undefined;
     if (window.innerWidth < 1024) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      const scrollToTop = (behavior: ScrollBehavior) => {
+        const y = window.scrollY + el.getBoundingClientRect().top - 4;
+        window.scrollTo({ top: Math.max(0, y), behavior });
+      };
+      scrollToTop("smooth");
+      settle = setTimeout(() => scrollToTop("smooth"), 700);
     }
     measure();
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
     return () => {
+      if (settle) clearTimeout(settle);
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
