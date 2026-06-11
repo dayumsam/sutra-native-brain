@@ -63,20 +63,25 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
     };
     // On small screens the page scrolls, so the target may be off-screen.
     // Force it flush with the top edge — the card sits as a sheet at the
-    // bottom. Re-assert once since iOS can interrupt smooth scrolls.
+    // bottom. Set scrollTop directly: smooth window.scrollTo silently
+    // no-ops on iOS while other animations are running. Deferred a frame
+    // and re-asserted in case layout shifts under it.
+    let raf: number | undefined;
     let settle: ReturnType<typeof setTimeout> | undefined;
     if (window.innerWidth < 1024) {
-      const scrollToTop = (behavior: ScrollBehavior) => {
-        const y = window.scrollY + el.getBoundingClientRect().top - 4;
-        window.scrollTo({ top: Math.max(0, y), behavior });
+      const force = () => {
+        const scroller = document.scrollingElement ?? document.documentElement;
+        const delta = el.getBoundingClientRect().top - 4;
+        if (Math.abs(delta) > 2) scroller.scrollTop += delta;
       };
-      scrollToTop("smooth");
-      settle = setTimeout(() => scrollToTop("smooth"), 700);
+      raf = requestAnimationFrame(force);
+      settle = setTimeout(force, 450);
     }
     measure();
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
     return () => {
+      if (raf !== undefined) cancelAnimationFrame(raf);
       if (settle) clearTimeout(settle);
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
