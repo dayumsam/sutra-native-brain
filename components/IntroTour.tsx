@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { DOMAIN_META, type Domain } from "@/lib/demo-data";
 
@@ -26,6 +26,7 @@ const STEPS: { target?: "graph" | "aside" }[] = [
 export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Props) {
   const [step, setStep] = useState(0);
   const [rect, setRect] = useState<TargetRect | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const target = STEPS[step]?.target;
   const last = step === STEPS.length - 1;
@@ -43,8 +44,12 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
   useEffect(() => {
     if (!open) return;
     if (window.innerWidth >= 1024) return;
+    // globals.css pins body to height: 100% — with border-box that fixed
+    // height swallows the padding, so release it or no scroll room appears.
+    document.body.style.height = "auto";
     document.body.style.paddingBottom = "60vh";
     return () => {
+      document.body.style.height = "";
       document.body.style.paddingBottom = "";
     };
   }, [open]);
@@ -62,16 +67,23 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
       setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
     };
     // On small screens the page scrolls, so the target may be off-screen.
-    // Force it flush with the top edge — the card sits as a sheet at the
-    // bottom. Set scrollTop directly: smooth window.scrollTo silently
-    // no-ops on iOS while other animations are running. Deferred a frame
-    // and re-asserted in case layout shifts under it.
+    // Scroll just far enough that the target's bottom lands a small gap
+    // above the card (a sheet at the bottom), so the two read as a stack.
+    // Set scrollTop directly: smooth window.scrollTo silently no-ops on
+    // iOS while other animations are running. Deferred a frame and
+    // re-asserted in case layout shifts under it.
     let raf: number | undefined;
     let settle: ReturnType<typeof setTimeout> | undefined;
     if (window.innerWidth < 1024) {
       const force = () => {
         const scroller = document.scrollingElement ?? document.documentElement;
-        const delta = el.getBoundingClientRect().top - 4;
+        const r = el.getBoundingClientRect();
+        const cardTop =
+          cardRef.current?.getBoundingClientRect().top ?? window.innerHeight * 0.45;
+        // Never push the target's top off-screen when it's taller than
+        // the space above the card.
+        const desiredTop = Math.max(4, cardTop - 28 - r.height);
+        const delta = r.top - desiredTop;
         if (Math.abs(delta) > 2) scroller.scrollTop += delta;
       };
       raf = requestAnimationFrame(force);
@@ -166,6 +178,7 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
           >
             <motion.div
               key={step}
+              ref={cardRef}
               initial={{ opacity: 0, y: 10, scale: 0.985 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
