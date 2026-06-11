@@ -85,6 +85,17 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
     const vw = window.innerWidth;
     if (vw < 1024) {
       cardPlacement = "sheet";
+      // Pin the sheet to whichever edge keeps it off the spotlit section.
+      // The page often can't scroll far enough to clear the bottom half,
+      // so judge by the part of the target that's actually on screen.
+      const vh = window.innerHeight;
+      const visibleCenter =
+        (Math.max(rect.top, 0) + Math.min(rect.top + rect.height, vh)) / 2;
+      if (visibleCenter > vh / 2) {
+        cardStyle.top = "calc(12px + env(safe-area-inset-top))";
+      } else {
+        cardStyle.bottom = "calc(12px + env(safe-area-inset-bottom))";
+      }
     } else {
       cardPlacement = "fixed";
       const cardW = Math.min(400, vw - 32);
@@ -152,8 +163,8 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
                         position: "fixed",
                         left: 12,
                         right: 12,
-                        bottom: "calc(12px + env(safe-area-inset-bottom))",
                         maxHeight: "55dvh",
+                        ...cardStyle,
                       }
                     : {
                         width: "min(440px, calc(100vw - 32px))",
