@@ -37,6 +37,18 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
     if (open) setStep(0);
   }
 
+  // While the tour is open on small screens, give the page extra scroll room
+  // so any spotlit section can reach the top of the viewport (the sheet sits
+  // at the bottom). Removed when the tour closes.
+  useEffect(() => {
+    if (!open) return;
+    if (window.innerWidth >= 1024) return;
+    document.body.style.paddingBottom = "60vh";
+    return () => {
+      document.body.style.paddingBottom = "";
+    };
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     const el =
@@ -85,17 +97,7 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
     const vw = window.innerWidth;
     if (vw < 1024) {
       cardPlacement = "sheet";
-      // Pin the sheet to whichever edge keeps it off the spotlit section.
-      // The page often can't scroll far enough to clear the bottom half,
-      // so judge by the part of the target that's actually on screen.
-      const vh = window.innerHeight;
-      const visibleCenter =
-        (Math.max(rect.top, 0) + Math.min(rect.top + rect.height, vh)) / 2;
-      if (visibleCenter > vh / 2) {
-        cardStyle.top = "calc(12px + env(safe-area-inset-top))";
-      } else {
-        cardStyle.bottom = "calc(12px + env(safe-area-inset-bottom))";
-      }
+      cardStyle.bottom = "calc(12px + env(safe-area-inset-bottom))";
     } else {
       cardPlacement = "fixed";
       const cardW = Math.min(400, vw - 32);
