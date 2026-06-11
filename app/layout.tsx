@@ -17,11 +17,11 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://uc.heysutra.com"),
-  title: "Sutra — Manufacturing Intelligence",
+  title: "Sutra | Manufacturing Intelligence",
   description:
     "A demo of Sutra as a context layer across Native's product, supplier, manufacturing, quality, service, and warranty data.",
   openGraph: {
-    title: "Sutra — Manufacturing Intelligence",
+    title: "Sutra | Manufacturing Intelligence",
     description:
       "A demo of Sutra as a context layer across Native's product, supplier, manufacturing, quality, service, and warranty data.",
     url: "https://uc.heysutra.com",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sutra — Manufacturing Intelligence",
+    title: "Sutra | Manufacturing Intelligence",
     description:
       "A demo of Sutra as a context layer across Native's product, supplier, manufacturing, quality, service, and warranty data.",
   },

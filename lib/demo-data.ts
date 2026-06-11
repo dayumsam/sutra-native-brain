@@ -142,7 +142,7 @@ export const NODES: GraphNodeDef[] = [
   },
   {
     id: "po_membrane", label: "Open membrane POs (4)", domain: "supplier", x: 255, y: 380,
-    fields: [["Open POs", "4"], ["Total qty", "22,400 units"], ["Next due", "6,000 — Jun 12"], ["Value", "₹67.2 L"], ["Supplier", "MemPure Technologies"]],
+    fields: [["Open POs", "4"], ["Total qty", "22,400 units"], ["Next due", "6,000 on Jun 12"], ["Value", "₹67.2 L"], ["Supplier", "MemPure Technologies"]],
   },
   {
     id: "sup_aquaclear", label: "AquaClear Systems", domain: "supplier", x: 140, y: 480,
@@ -200,7 +200,7 @@ export const NODES: GraphNodeDef[] = [
   },
   {
     id: "inv_membrane", label: "Membrane stock · 8,700u", domain: "inventory", x: 1150, y: 220,
-    fields: [["On hand", "8,700 units"], ["Open POs", "4"], ["Next receipt", "6,000 — Jun 12"], ["Cover", "~22 weeks"], ["Part", "MemPure V2"]],
+    fields: [["On hand", "8,700 units"], ["Open POs", "4"], ["Next receipt", "6,000 on Jun 12"], ["Cover", "~22 weeks"], ["Part", "MemPure V2"]],
   },
 
   // Service (right)
@@ -240,7 +240,7 @@ export const NODES: GraphNodeDef[] = [
   // Warranty (bottom-right)
   {
     id: "warranty_policy", label: "Warranty policy", domain: "warranty", x: 1140, y: 575,
-    fields: [["Term", "2 years"], ["Covers", "Parts + labour"], ["Filters", "Included"], ["Visit limit", "Unlimited"], ["Version", "v3 — Dec 2025"]],
+    fields: [["Term", "2 years"], ["Covers", "Parts + labour"], ["Filters", "Included"], ["Visit limit", "Unlimited"], ["Version", "v3, Dec 2025"]],
   },
   {
     id: "warranty_claims", label: "Warranty claims", domain: "warranty", x: 1245, y: 615,
@@ -476,14 +476,14 @@ export const WORKFLOWS: Workflow[] = [
       { nodeId: "water_profile", record: "water_profiles/bengaluru-south", detail: "High-TDS, borewell-fed area" },
       { nodeId: "warranty_policy", record: "policies/native-2yr", detail: "Filters and service visits covered" },
       { nodeId: "similar_tickets", record: "tickets/low-flow-blr-south", detail: "67 similar cases in 30 days · 82% fixed by pre-filter replacement" },
-      { nodeId: "batch_0529", record: "batches/M2-0529", detail: "No defect signal — complaints cluster by city, not batch" },
+      { nodeId: "batch_0529", record: "batches/M2-0529", detail: "No defect signal; complaints cluster by city, not batch" },
       { nodeId: "inv_prefilter_blr", record: "inventory/prefilter-blr", detail: "214 pre-filter kits available in Bengaluru" },
       { nodeId: "tech_slots", record: "technicians/blr-south", detail: "Next slot tomorrow, 10:00–12:00" },
     ],
     response: {
-      headline: "Covered warranty case — most likely a clogged pre-filter, not a defect.",
+      headline: "Covered warranty case: most likely a clogged pre-filter, not a defect.",
       narrative:
-        "Telemetry shows a gradual 38% drop in flow over 12 days — consistent with pre-filter clogging in a high-TDS area, not a pump failure. 67 similar cases in Bengaluru South were resolved the same way. There is no batch-level defect signal, so this stays a routine service visit.",
+        "Telemetry shows a gradual 38% drop in flow over 12 days, consistent with pre-filter clogging in a high-TDS area, not a pump failure. 67 similar cases in Bengaluru South were resolved the same way. There is no batch-level defect signal, so this stays a routine service visit.",
       facts: [
         ["Warranty", "Covered (2-year window)"],
         ["Device", "Native M2, 4 months old"],
@@ -512,7 +512,7 @@ export const WORKFLOWS: Workflow[] = [
         {
           id: "w1_a1",
           kind: "Checklist",
-          title: "Technician visit checklist — ST-1048",
+          title: "Technician visit checklist: ST-1048",
           lines: [
             "Verify inlet pressure at the supply tap",
             "Inspect sediment pre-filter for clogging",
@@ -525,11 +525,11 @@ export const WORKFLOWS: Workflow[] = [
         {
           id: "w1_a2",
           kind: "Email draft",
-          title: "Customer note — visit confirmation",
+          title: "Customer note: visit confirmation",
           meta: "To: customer on ticket ST-1048",
           lines: [
-            "Hi — thanks for reporting the low flow issue.",
-            "Your purifier is fully covered under warranty. Based on its usage data, the most likely cause is a clogged pre-filter — common in high-TDS areas like yours.",
+            "Hi, thanks for reporting the low flow issue.",
+            "Your purifier is fully covered under warranty. Based on its usage data, the most likely cause is a clogged pre-filter, which is common in high-TDS areas like yours.",
             "We've scheduled a technician visit with a replacement kit. There's no charge for the visit or the part.",
           ],
         },
@@ -569,7 +569,7 @@ export const WORKFLOWS: Workflow[] = [
     response: {
       headline: "The complaint spike traces back to one pump lot.",
       narrative:
-        "71% of affected devices come from two batches that share pump lot P-88A from AquaMotion. The lot passed the end-of-line pressure test, but failures appear 20–35 days after install — pointing to a fatigue issue the current test doesn't catch. Field data already shows pump replacement fixes it.",
+        "71% of affected devices come from two batches that share pump lot P-88A from AquaMotion. The lot passed the end-of-line pressure test, but failures appear 20–35 days after install, pointing to a fatigue issue the current test doesn't catch. Field data already shows pump replacement fixes it.",
       facts: [
         ["Affected devices", "418"],
         ["Concentration", "71% in batches M2-0529 and M2-0602"],
@@ -583,7 +583,7 @@ export const WORKFLOWS: Workflow[] = [
           action: "Quarantine remaining stock from pump lot P-88A.",
           why: [
             "Both affected batches share this one lot.",
-            "Failures show up in the field, not at end-of-line QC — so unshipped stock is suspect.",
+            "Failures show up in the field, not at end-of-line QC, so unshipped stock is suspect.",
             "Remaining inventory still contains the same lot.",
           ],
         },
@@ -597,7 +597,7 @@ export const WORKFLOWS: Workflow[] = [
         {
           action: "Add a 30-day fatigue test for the next three pump lots.",
           why: [
-            "Failures emerge 20–35 days in — outside the current test window.",
+            "Failures emerge 20–35 days in, outside the current test window.",
             "No long-duration test exists for this component today.",
           ],
         },
@@ -613,7 +613,7 @@ export const WORKFLOWS: Workflow[] = [
         {
           id: "w2_a1",
           kind: "Task",
-          title: "Quarantine order — pump lot P-88A",
+          title: "Quarantine order: pump lot P-88A",
           meta: "Quality + Supply Chain · needs approval",
           lines: [
             "Place a hold on all unconsumed stock from lot P-88A (est. 2,150 units)",
@@ -635,7 +635,7 @@ export const WORKFLOWS: Workflow[] = [
         {
           id: "w2_a3",
           kind: "Memo",
-          title: "CAPA draft — abnormal pump noise, lot P-88A",
+          title: "CAPA draft: abnormal pump noise, lot P-88A",
           meta: "For: Quality team review",
           lines: [
             "Problem: pump noise complaints up 3.2× in 14 days; 418 devices affected.",
@@ -657,26 +657,26 @@ export const WORKFLOWS: Workflow[] = [
     retrieval: [
       { nodeId: "supplier_email", record: "emails/aquamotion-delay", detail: "12,000 pump assemblies delayed 10 days" },
       { nodeId: "sup_aquamotion", record: "suppliers/aquamotion", detail: "Two late shipments in the last quarter" },
-      { nodeId: "po_4472", record: "purchase_orders/PO-4472", detail: "The delayed order — due this month" },
+      { nodeId: "po_4472", record: "purchase_orders/PO-4472", detail: "The delayed order, due this month" },
       { nodeId: "comp_pump", record: "components/pump-p200", detail: "Used in both Native M1 and M2" },
       { nodeId: "prod_m1", record: "products/native-m1", detail: "Affected SKU" },
-      { nodeId: "prod_m2", record: "products/native-m2", detail: "Affected SKU — higher volume" },
+      { nodeId: "prod_m2", record: "products/native-m2", detail: "Affected SKU with higher volume" },
       { nodeId: "inv_pump_south", record: "inventory/pumps-south", detail: "South warehouse: 4.2 days of cover" },
       { nodeId: "inv_pump_west", record: "inventory/pumps-west", detail: "West warehouse holds surplus · 8.5 days cover overall" },
       { nodeId: "city_demand", record: "demand/city-forecast", detail: "Bengaluru, Delhi NCR, Hyderabad carry the highest load" },
       { nodeId: "install_backlog", record: "field/install-backlog", detail: "1,840 bookings fall inside the delay window" },
-      { nodeId: "sup_flowdrive", record: "suppliers/flowdrive", detail: "Backup pump supplier — approved for M1 only" },
+      { nodeId: "sup_flowdrive", record: "suppliers/flowdrive", detail: "Backup pump supplier, approved for M1 only" },
     ],
     response: {
       headline: "Stock covers 8.5 of the 10 delay days. The gap is closable.",
       narrative:
-        "The delay hits both M1 and M2, with 1,840 installation bookings inside the window — concentrated in Bengaluru, Delhi NCR, and Hyderabad. Moving 3,000 units from the West warehouse and shifting M1 volume to the approved backup supplier closes most of the gap without touching customer commitments.",
+        "The delay hits both M1 and M2, with 1,840 installation bookings inside the window, concentrated in Bengaluru, Delhi NCR, and Hyderabad. Moving 3,000 units from the West warehouse and shifting M1 volume to the approved backup supplier closes most of the gap without touching customer commitments.",
       facts: [
         ["Delayed order", "PO-4472 · 12,000 units · 10 days"],
         ["SKUs affected", "Native M1 and M2"],
         ["Stock cover", "8.5 days at the current run-rate"],
         ["Bookings at risk", "1,840 across three cities"],
-        ["Backup supplier", "FlowDrive — approved for M1 only"],
+        ["Backup supplier", "FlowDrive (M1 only)"],
         ["Supplier history", "2 late shipments last quarter"],
       ],
       recommendations: [
@@ -714,7 +714,7 @@ export const WORKFLOWS: Workflow[] = [
         {
           id: "w3_a1",
           kind: "Task",
-          title: "Transfer order — 3,000 pump assemblies, West → South",
+          title: "Transfer order: 3,000 pump assemblies, West → South",
           meta: "Supply Chain · needs approval",
           lines: [
             "Transfer 3,000× Pump P-200 from West warehouse to South warehouse",
@@ -729,14 +729,14 @@ export const WORKFLOWS: Workflow[] = [
           meta: "To: AquaMotion Components",
           lines: [
             "We've received your note on the 10-day delay to PO-4472.",
-            "This affects committed installations in three cities, so we need a firm recovery date and a partial-shipment option — anything you can release early helps.",
+            "This affects committed installations in three cities, so we need a firm recovery date and a partial-shipment option; anything you can release early helps.",
             "Please also confirm whether the constraint affects the following month's order.",
           ],
         },
         {
           id: "w3_a3",
           kind: "Memo",
-          title: "City ops update — pump supply, next 10 days",
+          title: "City ops update: pump supply, next 10 days",
           meta: "To: Bengaluru, Delhi NCR, Hyderabad ops leads",
           lines: [
             "Pump deliveries are delayed 10 days; current stock covers about 8.5.",
@@ -771,7 +771,7 @@ export const WORKFLOWS: Workflow[] = [
     response: {
       headline: "The switch touches far more than the BOM.",
       narrative:
-        "Changing the membrane strands 8,700 units of current inventory and 4 open POs, requires a full validation suite before approval, and forces updates to the technician guide and packaging claims. Customers see no change if performance validates — but the change is high-risk if flow-rate variance exceeds the current spec.",
+        "Changing the membrane strands 8,700 units of current inventory and 4 open POs, requires a full validation suite before approval, and forces updates to the technician guide and packaging claims. Customers see no change if performance validates, but the change is high-risk if flow-rate variance exceeds the current spec.",
       facts: [
         ["SKU affected", "Native M2 Pro only"],
         ["BOM lines", "2"],
@@ -815,7 +815,7 @@ export const WORKFLOWS: Workflow[] = [
         {
           id: "w4_a1",
           kind: "Checklist",
-          title: "Validation protocol — AquaClear V3",
+          title: "Validation protocol: AquaClear V3",
           lines: [
             "TDS rejection rate vs spec (≥ 96%)",
             "Flow rate at three pressure points",
@@ -839,7 +839,7 @@ export const WORKFLOWS: Workflow[] = [
         {
           id: "w4_a3",
           kind: "Memo",
-          title: "Approval packet — ECO-214 summary",
+          title: "Approval packet: ECO-214 summary",
           meta: "Sign-off: Product → Quality → Supply Chain → Service Ops → Finance",
           lines: [
             "Change: RO membrane supplier switch on Native M2 Pro.",
@@ -857,5 +857,5 @@ export const COPY = {
   product: "Sutra",
   title: "Native context layer",
   intro:
-    "Native's operational data — products, suppliers, batches, tickets, telemetry, warranty — connected in one graph. Pick a workflow to see an agent read from the graph and prepare a response.",
+    "One core system that integrates products, suppliers, batches, tickets, telemetry, and warranty data into a single graph. Pick a workflow to see an agent read from the graph and prepare a response.",
 };

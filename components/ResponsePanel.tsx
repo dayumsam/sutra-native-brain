@@ -97,7 +97,7 @@ function PrimaryButton({ children }: { children: React.ReactNode }) {
 }
 
 function EmailArtifact({ artifact }: { artifact: Artifact }) {
-  const recipient = (artifact.meta ?? "").replace(/^To:\s*/i, "") || "—";
+  const recipient = (artifact.meta ?? "").replace(/^To:\s*/i, "") || "-";
   return (
     <div className="overflow-hidden rounded-xl border border-line bg-card shadow-sm">
       <div className="flex items-center justify-between border-b border-line-soft bg-paper/70 px-4 py-2">

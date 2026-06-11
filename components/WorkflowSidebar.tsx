@@ -352,8 +352,8 @@ export function GuidedWalkthrough({
       </ol>
 
       <p className="mt-5 border-t border-line-soft px-1 pt-4 text-[12px] leading-relaxed text-ink-faint">
-        Each run shows the agent reading Native&apos;s context graph before it drafts a response.
-        Work through the four workflows in order, or jump to any of them.
+        Each run shows the agent reading the context graph before it drafts a response. Work
+        through the four workflows in order, or jump to any of them.
       </p>
     </div>
   );

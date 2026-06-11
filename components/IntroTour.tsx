@@ -211,19 +211,20 @@ function StepContent({ step }: { step: number }) {
     return (
       <div className="px-5 pb-5 pt-5">
         <div className="text-[10.5px] font-semibold uppercase tracking-wide text-accent">
-          Sutra · Native context layer
+          Sutra · Core intelligence layer
         </div>
         <h2 className="mt-1.5 text-[17px] font-semibold tracking-tight text-ink">
           A quick orientation before you start
         </h2>
         <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">
-          Native&apos;s operational data — products, components, suppliers, manufacturing lots,
-          service tickets, telemetry, warranty claims — normally lives in separate systems. Sutra
-          connects it into one context graph that AI agents can read.
+          Sutra is the core system underneath the operation. It integrates data from every source
+          a business runs on: products, components, suppliers, manufacturing lots, service
+          tickets, device telemetry, and warranty claims, all connected in one living graph.
         </p>
         <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">
-          This demo walks through four moments where that matters. Everything here uses synthetic
-          data.
+          Everything you&apos;ll see is built on top of that layer: agents that read it, reason
+          over it, and hand back finished work. This walkthrough is a pre-computed simulation
+          running on synthetic data, built specifically for Native.
         </p>
       </div>
     );
@@ -259,7 +260,8 @@ function StepContent({ step }: { step: number }) {
           </span>
         </div>
         <p className="mt-3 text-[12px] leading-relaxed text-ink-faint">
-          Once the tour ends, hover any node to see the record behind it — drag nodes to explore.
+          Once the tour ends, hover any node to see the record behind it, and drag nodes to
+          explore.
         </p>
       </div>
     );
@@ -276,8 +278,8 @@ function StepContent({ step }: { step: number }) {
         </h2>
         <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">
           A new service ticket, a system alert, a supplier email, a proposed component change.
-          Click a workflow and watch the agent light up the records it reads — in order — before
-          it writes anything.
+          Click a workflow and watch the agent light up the records it reads, in order, before it
+          writes anything.
         </p>
         <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">
           They&apos;re designed to be run top to bottom, but you can jump to any of them.
@@ -301,7 +303,7 @@ function StepContent({ step }: { step: number }) {
         {[
           ["The trigger", "the event exactly as it arrived"],
           ["The retrieval log", "every record the agent read, and why it mattered"],
-          ["The drafts", "emails, tasks, checklists, and memos — grounded in those records"],
+          ["The drafts", "emails, tasks, checklists, and memos grounded in those records"],
         ].map(([label, desc], i) => (
           <div
             key={label}
@@ -311,13 +313,13 @@ function StepContent({ step }: { step: number }) {
               {i + 1}
             </span>
             <p className="text-[12.5px] leading-snug text-ink-soft">
-              <span className="font-semibold text-ink">{label}</span> — {desc}
+              <span className="font-semibold text-ink">{label}</span>: {desc}
             </p>
           </div>
         ))}
       </div>
       <p className="mt-3 text-[12px] leading-relaxed text-ink-faint">
-        Nothing is written from scratch — every claim in a draft traces back to a record in the
+        Nothing is written from scratch. Every claim in a draft traces back to a record in the
         graph.
       </p>
     </div>
