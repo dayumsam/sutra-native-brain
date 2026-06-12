@@ -1,6 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Workspace packages export TypeScript source directly.
+  transpilePackages: [
+    "@sutra/contracts",
+    "@sutra/ontology-core",
+    "@sutra/graph",
+    "@sutra/ingestion",
+    "@sutra/engine",
+    "@sutra/ontology-manufacturing",
+    "@sutra/customer-demo",
+  ],
+  serverExternalPackages: ["pg"],
   async rewrites() {
     return [
       {
