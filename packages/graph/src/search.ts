@@ -27,10 +27,13 @@ export async function hybridSearch(
 ): Promise<SearchResults> {
   return withSpan("graph.search", { "tenant.id": ctx.tenantId, "search.k": k }, async (setAttributes) => {
     const [queryVec] = await embedder.embed([query]);
-    const vecLiteral = toVectorLiteral(queryVec!);
+    const vecLiteral = queryVec ? toVectorLiteral(queryVec) : null;
+    const empty = Promise.resolve({ rows: [] as Array<Record<string, unknown>> });
 
     const [entityVec, entityFts, chunkVec, chunkFts] = await Promise.all([
-      db.execute(sql`
+      !vecLiteral
+        ? empty
+        : db.execute(sql`
         SELECT id, type, key, card_text FROM entities
         WHERE tenant_id = ${ctx.tenantId} AND deleted_at IS NULL AND embedding IS NOT NULL
         ORDER BY embedding <=> ${vecLiteral}::vector LIMIT ${k}
@@ -42,7 +45,9 @@ export async function hybridSearch(
         ORDER BY ts_rank(card_tsv, websearch_to_tsquery('english', ${query})) DESC
         LIMIT ${k}
       `),
-      db.execute(sql`
+      !vecLiteral
+        ? empty
+        : db.execute(sql`
         SELECT c.id, c.document_id, d.title, c.text FROM chunks c
         JOIN documents d ON d.id = c.document_id AND d.deleted_at IS NULL
         WHERE c.tenant_id = ${ctx.tenantId} AND c.embedding IS NOT NULL

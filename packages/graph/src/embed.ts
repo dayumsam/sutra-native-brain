@@ -2,18 +2,35 @@ import { embedMany } from "ai";
 
 export const EMBEDDING_DIM = 1536;
 
+// A null entry means "no embedding available" — writes proceed with a NULL
+// vector column and retrieval falls back to FTS. Embeddings are an
+// enhancement, never a gate on ingestion.
 export interface Embedder {
-  embed(texts: string[]): Promise<number[][]>;
+  embed(texts: string[]): Promise<Array<number[] | null>>;
 }
 
-// Production embedder via AI Gateway ("provider/model" string).
-export class GatewayEmbedder implements Embedder {
-  constructor(private readonly model = "openai/text-embedding-3-small") {}
+/** Disables vector search entirely (EMBEDDINGS=off, rate-limit fallback). */
+export class NullEmbedder implements Embedder {
+  async embed(texts: string[]): Promise<Array<number[] | null>> {
+    return texts.map(() => null);
+  }
+}
 
-  async embed(texts: string[]): Promise<number[][]> {
+// Production embedder via AI Gateway ("provider/model" string). Failures
+// (rate limits, outages) degrade to null embeddings rather than blocking
+// ingestion; the warning carries the cause for the trace/log stream.
+export class GatewayEmbedder implements Embedder {
+  constructor(private readonly model = process.env.EMBEDDING_MODEL ?? "openai/text-embedding-3-small") {}
+
+  async embed(texts: string[]): Promise<Array<number[] | null>> {
     if (texts.length === 0) return [];
-    const { embeddings } = await embedMany({ model: this.model, values: texts });
-    return embeddings;
+    try {
+      const { embeddings } = await embedMany({ model: this.model, values: texts });
+      return embeddings;
+    } catch (error) {
+      console.warn(`[embed] degraded to null embeddings: ${String(error).slice(0, 200)}`);
+      return texts.map(() => null);
+    }
   }
 }
 

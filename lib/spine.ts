@@ -9,6 +9,7 @@ import {
   GatewayEmbedder,
   GraphStore,
   migrate,
+  NullEmbedder,
   PgEventBus,
 } from "@sutra/graph";
 
@@ -23,7 +24,9 @@ export function getSpine(): Promise<SpineContext> | null {
   g.__spine ??= (async () => {
     const db = createDb();
     await migrate(db); // idempotent, forward-only
-    const embedder = new GatewayEmbedder();
+    // EMBEDDINGS=off skips vector embeddings entirely (FTS still works) —
+    // useful on the AI Gateway free tier, which rate-limits embedding calls.
+    const embedder = process.env.EMBEDDINGS === "off" ? new NullEmbedder() : new GatewayEmbedder();
     return {
       db,
       store: new GraphStore(db, embedder),

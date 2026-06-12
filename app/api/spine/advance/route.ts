@@ -29,13 +29,13 @@ export async function POST(request: Request) {
     published += events.length;
     const result = await tick(spine);
     signalIds.push(...result.newSignalIds);
+    // Checkpoint per day so an interrupted request resumes, not replays.
+    await spine.db.execute(sql`
+      INSERT INTO meta (tenant_id, k, v)
+      VALUES (${spine.tenantId}, 'fed_day', ${JSON.stringify(day)}::jsonb)
+      ON CONFLICT (tenant_id, k) DO UPDATE SET v = EXCLUDED.v
+    `);
   }
-
-  await spine.db.execute(sql`
-    INSERT INTO meta (tenant_id, k, v)
-    VALUES (${spine.tenantId}, 'fed_day', ${JSON.stringify(Math.max(fedDay, toDay))}::jsonb)
-    ON CONFLICT (tenant_id, k) DO UPDATE SET v = EXCLUDED.v
-  `);
 
   const runOutcomes = await executePendingRuns(spine);
 

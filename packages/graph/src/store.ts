@@ -59,7 +59,7 @@ export class GraphStore {
         const result = await this.db.execute(sql`
           INSERT INTO entities (tenant_id, type, key, properties, card_text, embedding)
           VALUES (${ctx.tenantId}, ${input.type}, ${key}, ${JSON.stringify(properties)}::jsonb,
-                  ${cardText}, ${toVectorLiteral(embedding!)}::vector)
+                  ${cardText}, ${embedding ? sql`${toVectorLiteral(embedding)}::vector` : sql`NULL`})
           ON CONFLICT (tenant_id, type, key) DO UPDATE SET
             properties = EXCLUDED.properties,
             card_text = EXCLUDED.card_text,
@@ -158,10 +158,11 @@ export class GraphStore {
         const embeddings = await this.embedder.embed(texts);
         await this.db.execute(sql`DELETE FROM chunks WHERE document_id = ${docId}`);
         for (let i = 0; i < texts.length; i++) {
+          const embedding = embeddings[i] ?? null;
           await this.db.execute(sql`
             INSERT INTO chunks (tenant_id, document_id, seq, text, embedding)
             VALUES (${ctx.tenantId}, ${docId}, ${i}, ${texts[i]!},
-                    ${toVectorLiteral(embeddings[i]!)}::vector)
+                    ${embedding ? sql`${toVectorLiteral(embedding)}::vector` : sql`NULL`})
           `);
         }
         for (const entityId of input.mentionEntityIds ?? []) {
