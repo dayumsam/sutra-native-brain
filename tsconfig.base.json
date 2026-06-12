@@ -10,9 +10,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
+    "noEmit": true,
     "paths": {
       "@sutra/contracts": ["./packages/contracts/src/index.ts"],
       "@sutra/ontology-core": ["./packages/ontology-core/src/index.ts"],
