@@ -14,3 +14,4 @@ export {
 } from "./insights";
 export type { TenantContext } from "./tenant";
 export { getLogger, type Logger, type LogLevel } from "./logger";
+export { withSpan } from "./tracing";
