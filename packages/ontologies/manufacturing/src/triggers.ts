@@ -54,7 +54,7 @@ export const supplierDelay = defineTrigger("supplier-delay", {
   kind: "event",
   severity: "warn",
   match: (event) => {
-    if (event.source !== "email") return null;
+    if (event.source !== "email" && event.source !== "mail") return null;
     const p = event.payload as {
       classification?: string;
       supplier?: string;
@@ -116,7 +116,7 @@ export const telemetryDrift = defineTrigger("telemetry-drift", {
   kind: "event",
   severity: "warn",
   match: (event) => {
-    if (event.source !== "telemetry") return null;
+    if (event.source !== "telemetry" && event.source !== "analytics") return null;
     const p = event.payload as {
       anomaly_key?: string;
       metric?: string;

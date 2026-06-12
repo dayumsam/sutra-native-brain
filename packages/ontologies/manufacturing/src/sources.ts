@@ -10,7 +10,7 @@ type P = Record<string, unknown>;
 const s = (v: unknown) => (v == null ? undefined : String(v));
 const n = (v: unknown) => (v == null ? undefined : Number(v));
 
-function erpMap(event: ChangeEvent): MappedRecord[] {
+export function erpMap(event: ChangeEvent): MappedRecord[] {
   const p = event.payload as P;
   switch (p.entity) {
     case "supplier":
@@ -171,7 +171,7 @@ function erpMap(event: ChangeEvent): MappedRecord[] {
   }
 }
 
-function ticketsMap(event: ChangeEvent): MappedRecord[] {
+export function ticketsMap(event: ChangeEvent): MappedRecord[] {
   const p = event.payload as P;
   if (p.entity === "cluster") {
     const records: MappedRecord[] = [
@@ -223,7 +223,7 @@ function ticketsMap(event: ChangeEvent): MappedRecord[] {
   return records;
 }
 
-function emailMap(event: ChangeEvent): MappedRecord[] {
+export function emailMap(event: ChangeEvent): MappedRecord[] {
   const p = event.payload as P;
   return [
     {
@@ -237,7 +237,7 @@ function emailMap(event: ChangeEvent): MappedRecord[] {
   ];
 }
 
-function telemetryMap(event: ChangeEvent): MappedRecord[] {
+export function telemetryMap(event: ChangeEvent): MappedRecord[] {
   const p = event.payload as P;
   const records: MappedRecord[] = [
     {
@@ -264,9 +264,21 @@ function telemetryMap(event: ChangeEvent): MappedRecord[] {
   return records;
 }
 
+// Analytics exports carry either complaint clusters or telemetry anomalies.
+export function analyticsMap(event: ChangeEvent): MappedRecord[] {
+  return (event.payload as P).entity === "cluster" ? ticketsMap(event) : telemetryMap(event);
+}
+
 export const SOURCES: Record<string, SourceMapping> = {
+  // In-process synthetic shapes (phase-1 default).
   erp: { map: erpMap },
   tickets: { map: ticketsMap },
   email: { map: emailMap },
   telemetry: { map: telemetryMap },
+  // Raw object-store shapes, parsed from realistic system exports
+  // (SAP-ish JSON, Zendesk tickets, RFC-822 mail, analytics exports).
+  "sap-erp": { map: erpMap },
+  zendesk: { map: ticketsMap },
+  mail: { map: emailMap },
+  analytics: { map: analyticsMap },
 };
