@@ -1,0 +1,23 @@
+{
+  "name": "@sutra/ingestion",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sutra/contracts": "*",
+    "@sutra/graph": "*",
+    "@sutra/ontology-core": "*"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.2",
+    "@electric-sql/pglite-pgvector": "^0.0.3",
+    "@sutra/customer-demo": "*",
+    "@sutra/ontology-manufacturing": "*"
+  }
+}
