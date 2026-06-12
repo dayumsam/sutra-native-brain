@@ -16,6 +16,7 @@ export function register() {
   const secretKey = process.env.LANGFUSE_SECRET_KEY;
   if (publicKey && secretKey) {
     const baseUrl = process.env.LANGFUSE_BASE_URL ?? "https://us.cloud.langfuse.com";
+    console.log(`[otel] trace export → Langfuse (${baseUrl}) enabled`);
     registerOTel({
       serviceName: SERVICE_NAME,
       traceExporter: new OTLPHttpProtoTraceExporter({
