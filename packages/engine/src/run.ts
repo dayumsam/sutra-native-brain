@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { getLogger, withSpan, type InsightContent, type Signal } from "@sutra/contracts";
 import type { Embedder } from "@sutra/graph";
 import { investigate } from "./investigate";
+import { getOrCreateSessionId } from "./session";
 import { checkCitations } from "./verify";
 import { SYNTHESIS_SYSTEM_PROMPT, type Synthesizer, type Verifier } from "./synthesize";
 import type { EngineDeps } from "./dispatcher";
@@ -25,15 +26,21 @@ async function loadSignal(deps: RunDeps, signalId: string): Promise<Signal> {
 
 // detect → investigate → synthesize → verify → route, recorded step by step
 // in agent_runs so a run can be reconstructed without any external tool.
+// Each run is its own root trace, grouped with the rest of the simulation
+// epoch into one Langfuse session.
 export async function executeAgentRun(deps: RunDeps, runId: string): Promise<string> {
-  return withSpan("agent.run", { "agent_run.id": runId }, async (setAttributes) => {
-    const runRow = await deps.db.execute(sql`SELECT * FROM agent_runs WHERE id = ${runId}`);
-    const run = runRow.rows[0] as
-      | { id: string; tenant_id: string; signal_id: string; status: string }
-      | undefined;
-    if (!run) throw new Error(`Agent run ${runId} not found`);
-    if (run.status !== "pending") return run.status;
+  const runRow = await deps.db.execute(sql`SELECT * FROM agent_runs WHERE id = ${runId}`);
+  const run = runRow.rows[0] as
+    | { id: string; tenant_id: string; signal_id: string; status: string }
+    | undefined;
+  if (!run) throw new Error(`Agent run ${runId} not found`);
+  if (run.status !== "pending") return run.status;
+  const sessionId = await getOrCreateSessionId(deps.db, run.tenant_id);
 
+  return withSpan(
+    "agent.run",
+    { "agent_run.id": runId, "langfuse.session.id": sessionId },
+    async (setAttributes) => {
     const ctx = { tenantId: run.tenant_id };
     const ontology = deps.registry.get(run.tenant_id);
     const signal = await loadSignal(deps, run.signal_id);
@@ -148,7 +155,9 @@ export async function executeAgentRun(deps: RunDeps, runId: string): Promise<str
       log.error({ run_id: runId, error: String(error) }, "agent run failed");
       return "failed";
     }
-  });
+    },
+    { root: true },
+  );
 }
 
 /** Execute every pending run (the dispatcher's follow-up work). */

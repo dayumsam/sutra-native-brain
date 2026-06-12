@@ -4,6 +4,7 @@ import type { OntologyRegistry } from "@sutra/ontology-core";
 import type { Db, GraphStore } from "@sutra/graph";
 import { normalizeEvents, type NormalizeStats } from "@sutra/ingestion";
 import { runEventTriggers, runSqlTriggers } from "./detectors";
+import { getOrCreateSessionId } from "./session";
 import { insertSignals } from "./signals";
 
 const log = getLogger("engine.dispatcher");
@@ -27,7 +28,10 @@ const BATCH_SIZE = 500;
 // One dispatcher tick: consume → normalize → detect → enqueue agent runs.
 // Idempotent and cheap when there is nothing to do.
 export async function tick(deps: EngineDeps): Promise<TickResult> {
-  return withSpan("engine.tick", {}, async (setAttributes) => {
+  // Phase 1 is single-tenant; the tick trace joins that tenant's session.
+  const firstTenant = deps.registry.tenantIds()[0];
+  const sessionId = firstTenant ? await getOrCreateSessionId(deps.db, firstTenant) : undefined;
+  return withSpan("engine.tick", sessionId ? { "langfuse.session.id": sessionId } : {}, async (setAttributes) => {
     const events = await deps.bus.consume(BATCH_SIZE);
     const result: TickResult = {
       processed: events.length,
