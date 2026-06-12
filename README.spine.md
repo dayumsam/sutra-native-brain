@@ -17,6 +17,7 @@ Copy `.env.example` → `.env.local` and fill in:
 | `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` | https://cloud.langfuse.com (free tier) — tracing no-ops when unset |
 | `DATA_MODE` | `graph` to enable the spine; unset/`demo` = scripted demo only |
 | `LOG_LEVEL` | `debug` for verbose pipeline logs |
+| `EMBEDDINGS` | `off` to skip vector embeddings (FTS-only retrieval). Recommended on the AI Gateway **free tier**, which rate-limits embedding calls; embedding failures otherwise degrade to NULL vectors with a warning. |
 
 Set the same variables in Vercel as **Preview-environment** variables only.
 Production gets none of them; with `DATA_MODE` unset the build is byte-identical
