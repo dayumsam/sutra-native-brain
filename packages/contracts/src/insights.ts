@@ -12,10 +12,20 @@ export const RecommendationSchema = z.object({
   why: z.array(FactSchema).min(1),
 });
 
+// Draft work products attached to an insight, always pending human approval.
+// kind is a closed enum so the UI renders each artifact correctly:
+//   email_draft — outbound message; meta carries the recipient ("To: …")
+//   checklist   — step-by-step list for a person (technician, QA, employee);
+//                 the title names who it is for
+//   task        — a discrete operational action (reserve stock, hold a PO)
+//   memo        — internal briefing note
 export const ArtifactSchema = z.object({
-  kind: z.string().min(1), // e.g. "email_draft", "checklist", "capa_form"
+  kind: z.enum(["email_draft", "checklist", "task", "memo"]),
   title: z.string().min(1),
-  body: z.string().min(1),
+  /** Short context line, e.g. "To: dispatch@aquamotion.in" or "Quality team". */
+  meta: z.string().optional(),
+  /** One entry per line/step/sentence — rendered as structured rows, not prose. */
+  lines: z.array(z.string().min(1)).min(1),
 });
 
 // The demo's insight shape, kept as the production schema (ARCHITECTURE.md §5).

@@ -32,7 +32,18 @@ export const SYNTHESIS_SYSTEM_PROMPT = [
   "- Cite ONLY ids present in the provided context. Never invent ids.",
   "- Numbers you state must come from the cited entities or documents.",
   "Recommended actions must be concrete next steps an ops team can execute.",
-  "Artifacts (email drafts, checklists) are drafts for human approval.",
+  "",
+  "ARTIFACT RULES — produce 2 to 4 ready-to-use drafts that operationalize the top recommendations,",
+  "each matched to its audience. Vary the kinds; do not make everything a memo:",
+  "- email_draft: an outbound message ready to send (to a supplier, customer, or internal team).",
+  "  meta = the recipient line, e.g. \"To: dispatch@aquamotion.in\". lines = the email sentences.",
+  "- checklist: a step-by-step working list for a specific person. Name the audience in the title,",
+  "  e.g. \"Technician visit checklist: …\" for field service or \"QA review checklist: …\" for the",
+  "  quality team. lines = individual actionable steps, imperative voice.",
+  "- task: one discrete operational action (reserve stock, hold a PO, schedule an inspection).",
+  "  meta = the owning team/system, lines = the specific instructions.",
+  "- memo: a short internal briefing for leadership or a cross-functional group. Use at most one.",
+  "All artifacts are drafts requiring human approval before anything is sent or executed.",
 ].join("\n");
 
 export class GatewaySynthesizer implements Synthesizer {

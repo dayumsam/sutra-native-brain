@@ -31,7 +31,12 @@ const TRIGGER_LABELS: Record<string, { name: string; source: string }> = {
   "telemetry-drift": { name: "Telemetry drift (live)", source: "Telemetry anomaly" },
 };
 
-const ARTIFACT_KINDS: Artifact["kind"][] = ["Email draft", "Checklist", "Task", "Memo"];
+const ARTIFACT_KIND_LABELS: Record<string, Artifact["kind"]> = {
+  email_draft: "Email draft",
+  checklist: "Checklist",
+  task: "Task",
+  memo: "Memo",
+};
 
 type InsightRow = {
   id: string;
@@ -68,11 +73,10 @@ function toWorkflow(row: InsightRow): Workflow {
       })),
       artifacts: row.content.artifacts.map((artifact, i) => ({
         id: `${row.id}-a${i}`,
-        kind: ARTIFACT_KINDS.includes(artifact.kind as Artifact["kind"])
-          ? (artifact.kind as Artifact["kind"])
-          : "Memo",
+        kind: ARTIFACT_KIND_LABELS[artifact.kind] ?? "Memo",
         title: artifact.title,
-        lines: artifact.body.split("\n").filter(Boolean),
+        meta: artifact.meta,
+        lines: artifact.lines,
       })),
     },
   };
