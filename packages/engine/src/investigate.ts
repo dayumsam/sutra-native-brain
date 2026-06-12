@@ -14,6 +14,8 @@ export type Investigation = {
   documents: Array<{ id: string; title: string; body: string }>;
   /** Every id the model is allowed to cite. */
   citableIds: Set<string>;
+  /** Citable items with their human-readable keys, for citation repair. */
+  citables: Array<{ id: string; key?: string }>;
   /** The rendered context block handed to the model. */
   contextText: string;
 };
@@ -59,10 +61,11 @@ export async function investigate(
         }
       }
 
-      const citableIds = new Set<string>([
-        ...subgraph.nodes.map((n) => n.id),
-        ...documents.keys(),
-      ]);
+      const citables = [
+        ...subgraph.nodes.map((n) => ({ id: n.id, key: n.key })),
+        ...[...documents.values()].map((d) => ({ id: d.id, key: d.title })),
+      ];
+      const citableIds = new Set(citables.map((c) => c.id));
 
       const nodeLines = subgraph.nodes.map((n) => `[${n.id}] ${n.type}: ${n.card_text}`);
       const byId = new Map(subgraph.nodes.map((n) => [n.id, n]));
@@ -94,7 +97,7 @@ export async function investigate(
         "investigate.docs": documents.size,
         "investigate.capped": subgraph.capped,
       });
-      return { subgraph, documents: [...documents.values()], citableIds, contextText };
+      return { subgraph, documents: [...documents.values()], citableIds, citables, contextText };
     },
   );
 }

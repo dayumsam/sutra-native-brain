@@ -30,6 +30,8 @@ export const SYNTHESIS_SYSTEM_PROMPT = [
   "- Every fact and every recommendation reason carries citations.",
   "- A citation is the bare id that appears in square brackets in the context (without the brackets).",
   "- Cite ONLY ids present in the provided context. Never invent ids.",
+  "- Copy each id EXACTLY as it appears between the brackets (the full 36-character value).",
+  "- Never cite ticket numbers, lot codes, serial numbers, or any human-readable code — only bracketed ids.",
   "- Numbers you state must come from the cited entities or documents.",
   "Recommended actions must be concrete next steps an ops team can execute.",
   "",

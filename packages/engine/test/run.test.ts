@@ -102,7 +102,7 @@ describe("checkCitations", () => {
         recommendations: [],
         artifacts: [],
       },
-      new Set(["yes"]),
+      [{ id: "yes" }],
     );
     expect(result.valid).toBe(false);
     if (!result.valid) expect(result.problems[0]).toContain("nope");

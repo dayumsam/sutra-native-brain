@@ -102,10 +102,15 @@ export async function executeAgentRun(deps: RunDeps, runId: string): Promise<str
         tokensIn += result.tokensIn;
         tokensOut += result.tokensOut;
 
-        const check = checkCitations(result.content, investigation.citableIds);
+        const check = checkCitations(result.content, investigation.citables);
         if (check.valid) {
           content = check.content;
-          stamp("synthesize", { attempt, tokensIn: result.tokensIn, tokensOut: result.tokensOut });
+          stamp("synthesize", {
+            attempt,
+            tokensIn: result.tokensIn,
+            tokensOut: result.tokensOut,
+            citationRepairs: check.repairs,
+          });
         } else {
           lastProblems = check.problems;
           stamp("citation_check_failed", { attempt, problems: check.problems.slice(0, 10) });
