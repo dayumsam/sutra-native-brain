@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import posthog from "posthog-js";
 import { motion, AnimatePresence } from "motion/react";
 import { type Workflow, type Artifact } from "@/lib/demo-data";
 
@@ -522,7 +523,15 @@ export function ResponsePanel({ workflow, status, revealedSteps, runId, nextWork
                             {rec.action}
                           </span>
                           <button
-                            onClick={() => setOpenWhy(open ? null : id)}
+                            onClick={() => {
+                              const next = open ? null : id;
+                              posthog.capture("recommendation_why_toggled", {
+                                workflow_id: workflow!.id,
+                                recommendation_index: i,
+                                action: next ? "expanded" : "collapsed",
+                              });
+                              setOpenWhy(next);
+                            }}
                             className="ml-2 text-[11.5px] font-medium text-accent hover:underline"
                           >
                             {open ? "hide" : "why?"}
@@ -598,7 +607,14 @@ export function ResponsePanel({ workflow, status, revealedSteps, runId, nextWork
                     </div>
                   </div>
                   <button
-                    onClick={onNextWorkflow}
+                    onClick={() => {
+                      posthog.capture("next_workflow_clicked", {
+                        current_workflow_id: workflow?.id,
+                        next_workflow_id: nextWorkflow?.id,
+                        next_workflow_name: nextWorkflow?.name,
+                      });
+                      onNextWorkflow?.();
+                    }}
                     className="flex shrink-0 items-center gap-1.5 rounded-lg bg-accent px-3.5 py-2 text-[12px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
                   >
                     Run

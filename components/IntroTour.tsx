@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
+import posthog from "posthog-js";
 import { AnimatePresence, motion } from "motion/react";
 import { DOMAIN_META, type Domain } from "@/lib/demo-data";
 
@@ -27,6 +28,7 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
   const [step, setStep] = useState(0);
   const [rect, setRect] = useState<TargetRect | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const target = STEPS[step]?.target;
   const last = step === STEPS.length - 1;
@@ -35,8 +37,42 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
   const [lastOpen, setLastOpen] = useState(open);
   if (open !== lastOpen) {
     setLastOpen(open);
-    if (open) setStep(0);
+    if (open) {
+      setStep(0);
+      posthog.capture("intro_tour_viewed");
+    }
   }
+
+  // While the tour is open, user scrolling is blocked. Desktop locks the page
+  // outright; small screens keep programmatic scrolling (the tour positions
+  // targets via scrollTop) but swallow wheel/touch scrolls outside the card,
+  // so the card's own content can still scroll.
+  useEffect(() => {
+    if (!open) return;
+    if (window.innerWidth >= 1024) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+    const block = (e: Event) => {
+      // Only let the gesture through when it's inside the card's scroll area
+      // AND that area actually overflows — otherwise the touch chains up and
+      // scrolls the page behind the tour.
+      const area = scrollAreaRef.current;
+      if (area && area.contains(e.target as Node) && area.scrollHeight > area.clientHeight) {
+        return;
+      }
+      e.preventDefault();
+    };
+    window.addEventListener("wheel", block, { passive: false });
+    window.addEventListener("touchmove", block, { passive: false });
+    return () => {
+      window.removeEventListener("wheel", block);
+      window.removeEventListener("touchmove", block);
+    };
+  }, [open]);
 
   // While the tour is open on small screens, give the page extra scroll room
   // so any spotlit section can reach the top of the viewport (the sheet sits
@@ -116,7 +152,11 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
   // Where the card sits relative to the spotlit region.
   // Desktop anchors it beside/over the target; small screens get a bottom sheet
   // since the anchored positions can land outside the viewport there.
+  // The fixed wrapper owns placement so motion.div keeps full control of
+  // transform — setting transform on the card itself gets clobbered when the
+  // entrance animation settles to `transform: none`.
   const cardStyle: React.CSSProperties = {};
+  const wrapperStyle: React.CSSProperties = {};
   let cardPlacement: "center" | "fixed" | "sheet" = "center";
   if (spotlight && typeof window !== "undefined") {
     const vw = window.innerWidth;
@@ -128,13 +168,21 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
       const cardW = Math.min(400, vw - 32);
       if (target === "aside") {
         // sidebar — card to its right, near the top
-        cardStyle.left = rect.left + rect.width + 20;
-        cardStyle.top = Math.max(16, rect.top + 20);
+        const top = Math.max(16, rect.top + 20);
+        wrapperStyle.left = rect.left + rect.width + 20;
+        wrapperStyle.top = top;
+        cardStyle.maxHeight = `calc(100dvh - ${top + 16}px)`;
       } else {
-        // graph — card floats centered over the canvas
-        cardStyle.left = rect.left + rect.width / 2;
-        cardStyle.top = rect.top + rect.height / 2;
-        cardStyle.transform = "translate(-50%, -50%)";
+        // graph — wrapper spans the canvas and flex-centers the card, so it
+        // can never extend past the spotlit region or the viewport
+        wrapperStyle.left = rect.left;
+        wrapperStyle.top = rect.top;
+        wrapperStyle.width = rect.width;
+        wrapperStyle.height = rect.height;
+        wrapperStyle.display = "flex";
+        wrapperStyle.alignItems = "center";
+        wrapperStyle.justifyContent = "center";
+        cardStyle.maxHeight = Math.min(rect.height - 24, window.innerHeight - 32);
       }
       cardStyle.width = cardW;
     }
@@ -173,8 +221,11 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
             className={
               cardPlacement === "center"
                 ? "absolute inset-0 flex items-center justify-center p-4"
-                : ""
+                : cardPlacement === "fixed"
+                  ? "pointer-events-none fixed"
+                  : ""
             }
+            style={cardPlacement === "fixed" ? wrapperStyle : undefined}
           >
             <motion.div
               key={step}
@@ -185,7 +236,7 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
               className="flex flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-2xl"
               style={
                 cardPlacement === "fixed"
-                  ? { position: "fixed", maxHeight: "calc(100dvh - 32px)", ...cardStyle }
+                  ? { pointerEvents: "auto", ...cardStyle }
                   : cardPlacement === "sheet"
                     ? {
                         position: "fixed",
@@ -200,7 +251,7 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
                       }
               }
             >
-              <div className="min-h-0 flex-1 overflow-y-auto">
+              <div ref={scrollAreaRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 <StepContent step={step} />
               </div>
 
@@ -219,7 +270,10 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
                 <div className="flex items-center gap-2">
                   {step === 0 ? (
                     <button
-                      onClick={onClose}
+                      onClick={() => {
+                        posthog.capture("intro_tour_skipped", { step });
+                        onClose();
+                      }}
                       className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-ink-faint transition-colors hover:text-ink-soft"
                     >
                       Skip intro
@@ -234,14 +288,24 @@ export function IntroTour({ open, asideRef, graphRef, onClose, onRunFirst }: Pro
                   )}
                   {last ? (
                     <button
-                      onClick={onRunFirst}
+                      onClick={() => {
+                        posthog.capture("intro_tour_completed", { total_steps: STEPS.length });
+                        onRunFirst();
+                      }}
                       className="rounded-lg bg-accent px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
                     >
                       Run the first workflow
                     </button>
                   ) : (
                     <button
-                      onClick={() => setStep((s) => s + 1)}
+                      onClick={() => {
+                        posthog.capture("intro_tour_step_advanced", {
+                          from_step: step,
+                          to_step: step + 1,
+                          total_steps: STEPS.length,
+                        });
+                        setStep((s) => s + 1);
+                      }}
                       className="rounded-lg bg-accent px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
                     >
                       Next

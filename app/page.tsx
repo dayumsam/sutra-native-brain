@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import posthog from "posthog-js";
 import { GraphCanvas } from "@/components/GraphCanvas";
 import { IntroTour } from "@/components/IntroTour";
 import { ResponsePanel } from "@/components/ResponsePanel";
@@ -49,6 +50,14 @@ export default function Home() {
       setRunId((id) => id + 1);
       setSidebarCollapsed(true);
 
+      posthog.capture("workflow_started", {
+        workflow_id: wf.id,
+        workflow_name: wf.name,
+        trigger_source: wf.triggerSource,
+        retrieval_steps: wf.retrieval.length,
+        previously_completed: completedIds.includes(wf.id),
+      });
+
       // On mobile, scroll graph into view so the animation is immediately visible
       if (typeof window !== "undefined" && window.innerWidth < 1024) {
         requestAnimationFrame(() => {
@@ -66,7 +75,18 @@ export default function Home() {
       timers.current.push(
         setTimeout(() => {
           setStatus("complete");
-          setCompletedIds((ids) => (ids.includes(wf.id) ? ids : [...ids, wf.id]));
+          setCompletedIds((ids) => {
+            const alreadyDone = ids.includes(wf.id);
+            posthog.capture("workflow_completed", {
+              workflow_id: wf.id,
+              workflow_name: wf.name,
+              trigger_source: wf.triggerSource,
+              retrieval_steps: wf.retrieval.length,
+              artifact_count: wf.response.artifacts.length,
+              is_first_completion: !alreadyDone,
+            });
+            return alreadyDone ? ids : [...ids, wf.id];
+          });
         }, readDone + SYNTHESIS_MS)
       );
     },
@@ -96,6 +116,7 @@ export default function Home() {
             onClick={() => {
               setSidebarCollapsed(false);
               setIntroOpen(true);
+              posthog.capture("intro_replayed");
             }}
             className="flex items-center gap-1.5 rounded-full border border-line px-2.5 py-0.5 text-[11px] text-ink-faint transition-colors hover:border-accent/40 hover:text-ink-soft"
           >
