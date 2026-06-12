@@ -157,7 +157,9 @@ function spikeTickets(day: number): ChangeEvent[] {
     }
   };
   make("M2-0529", 3, "S");
-  make("M2-0602", 1, "T");
+  // Second affected batch stays clearly below the quality-spike threshold
+  // (the demo narrative has it affected, the trigger fires on M2-0529 only).
+  make("M2-0602", day % 2 === 0 ? 1 : 0, "T");
   return events;
 }
 

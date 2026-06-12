@@ -28,6 +28,6 @@ describe("synthetic timeline", () => {
     const onSpikeBatch = spike.filter((no) => no.includes("-S")).length;
     const onSecondBatch = spike.filter((no) => no.includes("-T")).length;
     expect(onSpikeBatch).toBe(3 * 16); // 3/day, days 55–70
-    expect(onSecondBatch).toBe(16); // stays under the trigger threshold
+    expect(onSecondBatch).toBe(8); // every other day — stays under the trigger threshold
   });
 });

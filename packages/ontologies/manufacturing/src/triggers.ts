@@ -36,7 +36,9 @@ export const qualitySpike = defineTrigger("quality-spike", {
       ) AS payload
     FROM ticket_batch, latest
     GROUP BY batch_id, batch_code, t1
-    HAVING count(*) FILTER (WHERE opened_at > t1 - interval '7 days') >= 10
+    -- SPC discipline: do not alert until a full 35-day baseline window exists.
+    HAVING (SELECT min(opened_at) FROM t) <= t1 - interval '35 days'
+       AND count(*) FILTER (WHERE opened_at > t1 - interval '7 days') >= 10
        AND count(*) FILTER (WHERE opened_at > t1 - interval '7 days')
            >= 3 * greatest(
              (count(*) FILTER (WHERE opened_at <= t1 - interval '7 days'

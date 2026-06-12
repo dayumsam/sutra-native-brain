@@ -1,0 +1,27 @@
+{
+  "name": "@sutra/engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sutra/contracts": "*",
+    "@sutra/graph": "*",
+    "@sutra/ingestion": "*",
+    "@sutra/ontology-core": "*",
+    "ai": "^6.0.202",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.2",
+    "@electric-sql/pglite-pgvector": "^0.0.3",
+    "@sutra/customer-demo": "*",
+    "@sutra/ontology-manufacturing": "*",
+    "drizzle-orm": "^0.45.2"
+  }
+}
