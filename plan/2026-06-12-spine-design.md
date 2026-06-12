@@ -22,6 +22,8 @@ The defining requirement: the canonical layer is **ontology-agnostic**. Each cus
 | Agent runs | Real LLM synthesis via AI SDK `generateObject` through AI Gateway | Tests the genuine end-to-end loop including citation enforcement |
 | Data | Deterministic, seeded synthetic timeline (~90 days) | Reproducible replays; replay-against-modified-ontology is the core test loop |
 | Database | Postgres (Neon via Vercel) + pgvector + Postgres FTS | Doc §3: no graph DB, no OpenSearch until demonstrated need |
+| Deployment safety | All work on `spine` branch; `main` stays prod | Current codebase state is serving production |
+| Observability | OpenTelemetry tracing everywhere + Langfuse as trace backend | Every LLM call, graph query, and pipeline stage visible for debugging |
 
 ## 1. Repo layout
 
@@ -137,7 +139,34 @@ The timeline is indexed by day; the dispatcher's "advance timeline" endpoint fee
 
 On the branch, the existing workflow UI reads insights and graph neighborhoods from Postgres via server components/route handlers. `lib/demo-data.ts` remains a fallback behind an env flag (`DATA_MODE=demo|graph`). A dev-only simulation panel: reset DB, advance timeline to day N, list signals and agent runs.
 
-## 8. Testing
+## 8. Deployment safety
+
+Production deploys from `main`; the current codebase state is what prod users see. Rules for this phase:
+
+- **All commits go to the `spine` branch** (or sub-branches merged into `spine`). Nothing merges to `main` until phase 1 is reviewed and explicitly approved for release.
+- Vercel preview deployments of `spine` are expected and useful — they are isolated from prod. The database connection string and AI Gateway / Langfuse keys are set as **Preview-environment variables only** (scoped to the branch where possible), so production has no path to the new database and prod builds are bit-for-bit unaffected.
+- The `DATA_MODE` flag defaults to `demo` when unset, so even if spine code ever reached a prod build, the UI behavior would be unchanged without explicit env configuration.
+
+## 9. Observability and tracing
+
+Debuggability is a first-class requirement: every pipeline stage must be visible. Three layers:
+
+**Traces (OpenTelemetry + Langfuse).** `@vercel/otel` registers tracing in `instrumentation.ts` (coexisting with the existing OTel→PostHog log exporter), exporting OTLP to **Langfuse** (open-source LLM observability; nested trace trees, full prompts/completions, token costs, latency breakdowns). One trace per dispatcher tick and per agent run, with spans for every stage:
+
+- `ingest.normalize` (event id, source, resolved entity keys, upsert counts)
+- `graph.query` / `graph.traverse` (query name, tenant, row/node counts, duration)
+- `detect.<trigger-key>` (events scanned, signals emitted, dedupe hits)
+- `investigate.subgraph` (node/edge counts, cap hits, doc-search results)
+- `synthesize.llm` — via AI SDK `experimental_telemetry`, capturing model, full prompt, completion, token usage, and cost per call (triage, synthesis, and verifier calls each visible separately)
+- `verify.citations` (facts checked, violations, retry/degrade outcome)
+
+Spans carry `tenant_id`, `signal_id`, and `agent_run_id` attributes so a single agent run can be followed end to end in one Langfuse trace tree.
+
+**Structured logs.** A shared logger in `contracts` (thin wrapper, pino-style JSON) that injects the active trace/span ID into every log line, so logs and traces cross-link. Verbose by default in dev/preview (`LOG_LEVEL=debug`): SQL statements with parameters, rendered LLM context, detector evaluation details. Logs continue flowing to PostHog via the existing exporter; locally they pretty-print to the console.
+
+**Domain records.** Independent of any vendor: `agent_runs` stores steps, the exact subgraph snapshot sent to the model, token counts, and errors; `events.processed_at` and `signals` make the pipeline's state inspectable with plain SQL. The dev simulation panel surfaces these in the UI with deep links to the corresponding Langfuse trace.
+
+## 10. Testing
 
 - **Unit:** ontology validation and composition (extend/override), deterministic resolution keys, traversal CTE correctness, citation validator.
 - **Integration (the one that matters):** replay the full synthetic timeline → assert the quality-spike signal fires exactly once (dedupe works), the extracted subgraph contains the expected batch → lot → supplier → open-PO chain, and the synthesized insight's citations all resolve to subgraph IDs. LLM assertions are structural (schema + citation validity), never prose comparison.
