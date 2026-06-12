@@ -406,7 +406,7 @@ export function ResponsePanel({ workflow, status, revealedSteps, runId, nextWork
               <div className="mt-2.5 overflow-hidden rounded-xl border border-line bg-card shadow-sm">
                 {steps.map((step, i) => (
                   <motion.div
-                    key={step.nodeId}
+                    key={`${step.nodeId}-${step.record}-${i}`}
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25 }}
