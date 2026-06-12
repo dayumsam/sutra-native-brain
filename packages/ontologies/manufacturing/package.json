@@ -1,0 +1,17 @@
+{
+  "name": "@sutra/ontology-manufacturing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sutra/contracts": "*",
+    "@sutra/ontology-core": "*",
+    "zod": "^4.4.3"
+  }
+}
