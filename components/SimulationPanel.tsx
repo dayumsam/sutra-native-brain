@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+type SubgraphNode = { id: string; type: string; key: string; card_text: string };
+type SubgraphEdge = { id: string; type: string; src: string; dst: string };
+
 type Run = {
   id: string;
   status: string;
@@ -12,8 +15,55 @@ type Run = {
   tokens_out: number;
   error: string | null;
   steps: Array<{ stage: string; detail: Record<string, unknown> }>;
+  subgraph_snapshot: { nodes: SubgraphNode[]; edges: SubgraphEdge[]; capped?: boolean } | null;
   created_at: string;
 };
+
+// The subgraph an agent run actually worked on, rendered from its snapshot —
+// every node here was in the model's context and is citable by id.
+function SubgraphView({ snapshot }: { snapshot: NonNullable<Run["subgraph_snapshot"]> }) {
+  const byId = new Map(snapshot.nodes.map((n) => [n.id, n]));
+  const byType = new Map<string, SubgraphNode[]>();
+  for (const node of snapshot.nodes) {
+    byType.set(node.type, [...(byType.get(node.type) ?? []), node]);
+  }
+  return (
+    <div className="mt-2 space-y-2 rounded border border-line/50 bg-paper/50 p-3">
+      <p className="text-xs font-semibold text-ink-soft">
+        Subgraph in context: {snapshot.nodes.length} nodes, {snapshot.edges.length} edges
+        {snapshot.capped ? " (capped)" : ""}
+      </p>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+        {[...byType.entries()].map(([type, nodes]) => (
+          <details key={type}>
+            <summary className="cursor-pointer text-accent">
+              {type} × {nodes.length}
+            </summary>
+            <ul className="ml-3 list-disc text-ink-faint">
+              {nodes.map((n) => (
+                <li key={n.id} title={n.id}>
+                  {n.card_text}
+                </li>
+              ))}
+            </ul>
+          </details>
+        ))}
+      </div>
+      <details>
+        <summary className="cursor-pointer text-xs text-ink-faint">
+          relationships ({snapshot.edges.length})
+        </summary>
+        <ul className="ml-3 text-xs text-ink-faint">
+          {snapshot.edges.map((e) => (
+            <li key={e.id}>
+              {byId.get(e.src)?.card_text ?? e.src} —{e.type}→ {byId.get(e.dst)?.card_text ?? e.dst}
+            </li>
+          ))}
+        </ul>
+      </details>
+    </div>
+  );
+}
 
 type Insight = {
   id: string;
@@ -119,6 +169,15 @@ export function SimulationPanel() {
           >
             Reset database
           </button>
+          <button
+            onClick={() => {
+              note("refresh");
+              void refresh();
+            }}
+            className="rounded-full border border-line px-4 py-1.5 text-sm hover:border-accent/40"
+          >
+            Refresh
+          </button>
           {busy && <span className="text-sm text-ink-faint">working: {busy}</span>}
         </section>
 
@@ -149,6 +208,7 @@ export function SimulationPanel() {
                       <code className="text-xs text-ink-faint">{run.trace_id}</code>
                     ))}
                 </summary>
+                {run.subgraph_snapshot && <SubgraphView snapshot={run.subgraph_snapshot} />}
                 <pre className="mt-2 overflow-x-auto text-xs text-ink-faint">
                   {JSON.stringify(run.steps, null, 2)}
                 </pre>
