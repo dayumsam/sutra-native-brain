@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "paths": {
+      "@sutra/contracts": ["./packages/contracts/src/index.ts"],
+      "@sutra/ontology-core": ["./packages/ontology-core/src/index.ts"],
+      "@sutra/graph": ["./packages/graph/src/index.ts"],
+      "@sutra/ingestion": ["./packages/ingestion/src/index.ts"],
+      "@sutra/engine": ["./packages/engine/src/index.ts"],
+      "@sutra/ontology-manufacturing": ["./packages/ontologies/manufacturing/src/index.ts"],
+      "@sutra/customer-demo": ["./customers/demo/src/index.ts"]
+    }
+  }
+}
