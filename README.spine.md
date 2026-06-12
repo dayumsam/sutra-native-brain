@@ -18,6 +18,20 @@ Copy `.env.example` → `.env.local` and fill in:
 | `DATA_MODE` | `graph` to enable the spine; unset/`demo` = scripted demo only |
 | `LOG_LEVEL` | `debug` for verbose pipeline logs |
 | `EMBEDDINGS` | `off` to skip vector embeddings (FTS-only retrieval). Recommended on the AI Gateway **free tier**, which rate-limits embedding calls; embedding failures otherwise degrade to NULL vectors with a warning. |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob store `sutra-raw` (auto-provisioned once the store is connected to the project; Dev/Preview only) |
+| `RAW_SOURCE` | `blob` to ingest from raw object-store artifacts instead of the in-process generator (see below) |
+
+## Raw data path (object storage)
+
+Per ARCHITECTURE.md §1, raw payloads live in object storage. `node
+--experimental-strip-types scripts/seed-blob.mjs` renders the full timeline as
+**realistic source exports** — SAP-style ERP JSON, Zendesk-shaped tickets,
+RFC-822 `.eml` emails, analytics exports — under `raw/demo/{source}/day=NN/` in
+the `sutra-raw` Blob store. With `RAW_SOURCE=blob`, the advance endpoint
+ingests through `RawStoreConnector`, which lists/fetches/parses those
+artifacts the way a real connector would (keyword classification of emails,
+reference extraction from text, custom-field mapping). Unit tests assert the
+raw path produces a structurally identical graph to the direct path.
 
 Set the same variables in Vercel as **Preview-environment** variables only.
 Production gets none of them; with `DATA_MODE` unset the build is byte-identical
